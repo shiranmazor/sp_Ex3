@@ -9,6 +9,8 @@
 #define BLACK_M 'M'
 #define BLACK_K 'K'
 #define EMPTY ' '
+#define WHITE = 1
+#define BLACK = 0
 
 #define BOARD_SIZE 10
 
@@ -30,6 +32,12 @@ typedef char** board_t;
 typedef struct Pos Pos;
 typedef struct Move Move;
 int getIntValue(char c);
+int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int color);
+void settingState(char board[BOARD_SIZE][BOARD_SIZE]);
+char* getString(FILE* fp, size_t size);
+char *trimwhitespace(char *str);
+int split(char *str, char c, char ***arr);
+void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input);
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE]);
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
