@@ -1,10 +1,15 @@
 #include "Draughts.h"
 #include <string.h>
+#include <assert.h>
+#include <ctype.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 
 //globals:
-int maxDepth;
-int computerColor = 0;//by default the use played is white = 1
+int minimax_depth = 1;
+int computer_color = BLACK;//by default the use played is white = 1
 
 struct Pos{
 	char x;
@@ -19,7 +24,7 @@ struct Move{
 
 int getIntValue(char c)
 {
-	return c - 96;
+	return c - 'a';
 }
 
 /*
@@ -53,7 +58,7 @@ int main()
 {
 	char board[BOARD_SIZE][BOARD_SIZE];
 	
-	printf('%s', WELCOME_TO_DRAUGHTS);
+	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
 
 	//print_message(WRONG_MINIMAX_DEPTH);
@@ -64,10 +69,12 @@ int main()
 void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 {
 	init_board(board);
-	printf('%s', ENTER_SETTINGS);
+	printf("%s", ENTER_SETTINGS);
 	char *command = getString(stdin, 10);
 	while (strcmp(command, "quit") != 0 || strcmp(command, "start") != 0)
 	{
+		reduceSpaces(command);
+		executeSettingCmd(board, command);
 
 		command = getString(stdin, 10);
 	}
@@ -75,7 +82,7 @@ void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 	{
 		//call game state on the board
 	}
-	if(strcmp(command, "quit") == 0)
+	else if(strcmp(command, "quit") == 0)
 	{
 		//TODO:clean all memory
 		exit(0);
@@ -87,7 +94,81 @@ void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE],char* input)
 {
 	//trim all spaces from start and end:
 	input = trimwhitespace(input);
+	char **arr = NULL;
+	int arr_len = split(input, ' ', &arr);
+	if (arr_len == 1)//print,clear
+	{
+		if (strcmp(arr[0], "clear") == 0)
+		{
+			//call clear
+			clear_board(board);
+		}
+		else if (strcmp(arr[0], "print") == 0)
+		{
+			print_board(board);
+		}
+	}
+	else if (arr_len == 2)//rm <x,y>, user_color x, minimax_depth x
+	{
+		if (strcmp(arr[0], "minimax_depth") ==0)
+		{
+			set_minimax_depth(atoi(arr[1]));
+		}
+		else if (strcmp(arr[0], "user_color") == 0)
+		{
+			if (strcmp(arr[1], "black") == 0)
+				computer_color = WHITE;
+			else if (strcmp(arr[1], "white") == 0)
+				computer_color = BLACK;
+		}
+		else if (strcmp(arr[0], "rm") == 0)
+		{
+			remove_disc(board, arr[1]);
+		}
+
+	}
+	else if (arr_len == 4 && strcmp(arr[0],"set") == 0)//set <x,y> a b
+	{ 
+		set_disc(board, arr[1], arr[2], arr[3]);
+	}
+	else
+	{
+		printf("%s", ILLEGAL_COMMAND);
+	}
+		
+
+	freeArray(arr, arr_len);
 }
+
+char* replace(char *s, char ch, char *repl) 
+{
+	int count = 0;
+	const char *t;
+	for (t = s; *t; t++)
+		count += (*t == ch);
+
+	size_t rlen = strlen(repl);
+	char *res = malloc(strlen(s) + (rlen - 1)*count + 1);
+	if (res == NULL)
+	{
+		perror("memory allocation in replace has failed!");
+		assert(res != NULL);
+	}
+
+	char *ptr = res;
+	for (t = s; *t; t++) {
+		if (*t == ch) {
+			memcpy(ptr, repl, rlen);
+			ptr += rlen;
+		}
+		else {
+			*ptr++ = *t;
+		}
+	}
+	*ptr = 0;
+	return res;
+}
+
 
 char *trimwhitespace(char *str)
 {
@@ -127,8 +208,9 @@ int split(char *str, char c, char ***arr)
 	*arr = (char**)malloc(num);
 	if (*arr == NULL)
 	{
-		perror("memory allocation while spiliting has failed!");
-		assert(arr != NULL);
+		perror_message("split");
+		//TODO:free all alocated memory of the program
+		exit(0);
 	}
 	p = str;
 	//2 - allocating arr space
@@ -140,8 +222,9 @@ int split(char *str, char c, char ***arr)
 			(*arr)[i] = (char*)malloc(num2);
 			if ((*arr)[i] == NULL)
 			{
-				perror("memory allocation while spiliting has failed!");
-				assert((*arr)[i] != NULL);
+				perror_message("split");
+				//TODO:free all alocated memory of the program
+				exit(0);
 			}
 
 			token_len = 0;
@@ -155,8 +238,9 @@ int split(char *str, char c, char ***arr)
 	(*arr)[i] = (char*)malloc(num3);
 	if ((*arr)[i] == NULL)
 	{
-		perror("memory allocation while spiliting has failed!");
-		assert((*arr)[i] != NULL);
+		perror_message("split");
+		//TODO:free all alocated memory of the program
+		exit(0);
 	}
 
 	i = 0;
@@ -183,6 +267,37 @@ int split(char *str, char c, char ***arr)
 	i++;
 	return count;
 
+}
+
+void freeArray(char** arrMul, int c)
+{
+	if (arrMul == NULL)
+		return;
+
+	for (int i = 0; i < c; ++i) {
+		if (arrMul[i] != NULL)
+			free(arrMul[i]);
+	}
+
+	free(arrMul);
+}
+
+void reduceSpaces(char *str)
+{
+	char *dest = str;  
+
+	/* While we're not at the end of the string, loop... */
+	while (*str != '\0')
+	{
+		/* Loop while the current character is a space, AND the next
+		* character is a space
+		*/
+		while (*str == ' ' && *(str + 1) == ' ')
+			str++; 
+		*dest++ = *str++;
+	}
+
+	*dest = '\0';
 }
 
 void print_line(){
@@ -214,7 +329,18 @@ void print_board(char board[BOARD_SIZE][BOARD_SIZE])
 	printf("\n");
 }
 
-
+void clear_board(char board[BOARD_SIZE][BOARD_SIZE])
+{
+	int i, j;
+	for (i = 0; i < BOARD_SIZE; i++)
+	{
+		for (j = 0; j < BOARD_SIZE; j++)
+		{
+			if (board[i][j] != EMPTY)
+				board[i][j] = EMPTY;
+		}
+	}
+}
 
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]){
 	int i, j;
@@ -234,6 +360,71 @@ void init_board(char board[BOARD_SIZE][BOARD_SIZE]){
 			else{
 				board[i][j] = EMPTY;
 			}
+		}
+	}
+}
+
+void set_minimax_depth(int depth)
+{
+	if (depth < 1 || depth > 6)
+		printf("%s", WRONG_MINIMAX_DEPTH);
+	else
+		minimax_depth = depth;
+}
+
+
+int formatPos(char* pos_input, char ***arr)
+{
+	pos_input = replace(pos_input, '<', "");
+	pos_input = replace(pos_input, '>', "");
+	int arr_len = split(pos_input, ',', arr);
+	return arr_len;
+}
+void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input)
+{
+	//input is <x,y>
+	char **arr = NULL;
+	int arr_len = formatPos(input, &arr);
+	char x = arr[0][0];
+	int y = atoi(arr[1]);
+	if (x < 97 || x > 106 || y<1 || y>10 || y % 2 == 0)
+	{
+		printf("%s", WRONG_POSITION);
+	}
+	else
+	{
+		int x_int = getIntValue(x);
+		board[x_int][y-1] = EMPTY;
+	}
+	freeArray(arr, arr_len);
+}
+
+void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color, char* type)
+{
+	char **arr = NULL;
+	int arr_len = formatPos(pos_input, &arr);
+	char x = arr[0][0];
+	int y = atoi(arr[1]);
+	if (x < 97 || x > 106 || y<1 || y>10 || y % 2 == 0)
+	{
+		printf("%s", WRONG_POSITION);
+	}
+	else
+	{
+		int x_int = getIntValue(x);
+		if (strcmp(color, "black") == 0)
+		{
+			if (strcmp(type, "k") == 0)
+				board[x_int][y - 1] = BLACK_K;
+			else if (strcmp(type, "m") == 0)
+				board[x_int][y - 1] = BLACK_M;
+		}
+		else if (strcmp(color, "white") == 0)
+		{
+			if (strcmp(type, "k") == 0)
+				board[x_int][y - 1] = WHITE_K;
+			else if (strcmp(type, "m") == 0)
+				board[x_int][y - 1] = WHITE_M;
 		}
 	}
 }

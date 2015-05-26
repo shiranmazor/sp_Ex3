@@ -9,8 +9,8 @@
 #define BLACK_M 'M'
 #define BLACK_K 'K'
 #define EMPTY ' '
-#define WHITE = 1
-#define BLACK = 0
+#define WHITE  1
+#define BLACK  0
 
 #define BOARD_SIZE 10
 
@@ -38,8 +38,16 @@ char* getString(FILE* fp, size_t size);
 char *trimwhitespace(char *str);
 int split(char *str, char c, char ***arr);
 void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input);
+void freeArray(char** arrMul, int c);
+void reduceSpaces(char *str);
+char* replace(char *s, char ch, char *repl);
+int formatPos(char* pos_input, char **arr);
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE]);
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
+void clear_board(char board[BOARD_SIZE][BOARD_SIZE]);
+void set_minimax_depth(int depth);
+void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input);
+void set_disc(char board[BOARD_SIZE][BOARD_SIZE], char* pos_input, char* color, char* type);
 
 #endif  
