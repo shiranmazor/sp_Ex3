@@ -23,8 +23,7 @@ typedef char** board_t;
 #define WROND_BOARD_INITIALIZATION "Wrong board initialization\n"
 
 #define ENTER_YOUR_MOVE "Enter your move:\n" 
-
-#define perror_message(func_name) (perror("Error: standard function %s has failed", func_name))
+#define perror_message(func_name) (fprintf(stderr, "Error: standard function %s has failed\n", func_name))
 #define print_message(message) (printf("%s", message));
 
 
@@ -32,7 +31,4 @@ typedef char** board_t;
 void print_board(char board[BOARD_SIZE][BOARD_SIZE]);
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
 
-//help functions:
-char* getString(FILE* fp, size_t size);
-int settingState();
 #endif  

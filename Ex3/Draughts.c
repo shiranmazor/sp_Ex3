@@ -1,49 +1,15 @@
 #include "Draughts.h"
 
-
-//help functions:
-/*
-reading string input from user and relloc the char pointer
-size - initial size of the pointer
-*/
-char* getString(FILE* fp, size_t size)
-{
-	char *str;
-	int ch;
-	size_t len = 0;
-	str = realloc(NULL, sizeof(char)*size);
-	if (!str)
-		return str;
-	while (EOF != (ch = fgetc(fp)) && ch != '\n')
-	{
-		str[len++] = ch;
-		if (len == size)
-		{
-			str = realloc(str, sizeof(char)*(size += 16));
-			if (!str)
-				return str;
-		}
-	}
-	str[len++] = '\0';
-	return str;
-}
-
 int main()
 {
 	char board[BOARD_SIZE][BOARD_SIZE];
-	printf("%s", WELCOME_TO_DRAUGHTS);
 	init_board(board);
-	settingState();
 	print_board(board);
 	print_message(WRONG_MINIMAX_DEPTH);
+	perror_message("TEST");
 	return 0;
 }
 
-int settingState()
-{
-	printf("%s", ENTER_SETTINGS);
-	
-}
 
 void print_line(){
 	int i;
