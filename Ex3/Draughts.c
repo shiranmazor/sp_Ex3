@@ -1,5 +1,23 @@
 #include "Draughts.h"
 
+
+struct Pos{
+	char x;
+	int y;
+};
+
+struct Move{
+	Pos currPos;
+	int eat;
+	Move *next;
+};
+
+int getIntValue(char c)
+{
+	return c - 96;
+}
+
+
 int main()
 {
 	char board[BOARD_SIZE][BOARD_SIZE];

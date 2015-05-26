@@ -27,6 +27,9 @@ typedef char** board_t;
 #define print_message(message) (printf("%s", message));
 
 
+typedef struct Pos Pos;
+typedef struct Move Move;
+int getIntValue(char c);
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE]);
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);

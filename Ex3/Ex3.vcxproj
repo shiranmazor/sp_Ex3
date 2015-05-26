@@ -65,6 +65,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Draughts.c" />
+    <ClCompile Include="minimax.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Draughts.h" />

@@ -18,6 +18,9 @@
     <ClCompile Include="Draughts.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="minimax.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Draughts.h">
