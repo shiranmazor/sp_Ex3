@@ -435,7 +435,7 @@ Move * parseMoveCommand(char *command)
 	}
 
 	Move *move = (Move*) malloc(sizeof(Move));
-	//TODO trim and remove double spcaes
+	
 
 	char** arr = NULL;
 	int arrLen = split(command, ' ', &arr);
@@ -854,6 +854,7 @@ int userTurn(char board[BOARD_SIZE][BOARD_SIZE])
 		Move *move = parseMoveCommand(command);
 		if (move != NULL)
 			performUserMove(board, *move);
+		free(move);
 	}
 }
 
