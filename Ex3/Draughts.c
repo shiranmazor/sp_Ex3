@@ -429,3 +429,11 @@ void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color,
 	}
 }
 
+int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
+{
+	if (player_color == WHITE)
+	{
+
+	}
+
+}
