@@ -35,6 +35,7 @@ typedef struct Move Move;
 int getIntValue(char c);
 int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int color);
 void settingState(char board[BOARD_SIZE][BOARD_SIZE]);
+void GameState(char board[BOARD_SIZE][BOARD_SIZE]);
 char* getString(FILE* fp, size_t size);
 char *trimwhitespace(char *str);
 int split(char *str, char c, char ***arr);
@@ -54,7 +55,10 @@ int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color);
 int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], char player_man, char player_king, char opponent_man
 , char opponent_king, char* direction);
 int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, 
-	char opponentM, char opponentK, char* direction, int king);
-
+char opponentM, char opponentK, char* direction, int king);
+int computerTurn(char board[BOARD_SIZE][BOARD_SIZE]);
+int userTurn(int computerTurn(char board[BOARD_SIZE][BOARD_SIZE]));
+int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move);
+int checkMoveIsValid(char board[BOARD_SIZE][BOARD_SIZE], Move move);
 
 #endif  

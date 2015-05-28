@@ -144,82 +144,6 @@ int main()
 }
 
 
-void settingState(char board[BOARD_SIZE][BOARD_SIZE])
-{
-	init_board(board);
-	printf("%s", ENTER_SETTINGS);
-	char *command = getString(stdin, 10);
-	while (strcmp(command, "quit") != 0 && strcmp(command, "start") != 0)
-	{
-		reduceSpaces(command);
-		executeSettingCmd(board, command);
-
-		command = getString(stdin, 10);
-	}
-	if (strcmp(command, "start") == 0)
-	{
-		//call game state on the board
-	}
-	else if(strcmp(command, "quit") == 0)
-	{
-		//TODO:clean all memory
-		if (objectsInMemory > 0)
-			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
-
-		exit(0);
-	}
-
-}
-
-void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE],char* input)
-{
-	//trim all spaces from start and end:
-	input = trimwhitespace(input);
-	char **arr = NULL;
-	int arr_len = split(input, ' ', &arr);
-	if (arr_len == 1)//print,clear
-	{
-		if (strcmp(arr[0], "clear") == 0)
-		{
-			//call clear
-			clear_board(board);
-		}
-		else if (strcmp(arr[0], "print") == 0)
-		{
-			print_board(board);
-		}
-	}
-	else if (arr_len == 2)//rm <x,y>, user_color x, minimax_depth x
-	{
-		if (strcmp(arr[0], "minimax_depth") ==0)
-		{
-			set_minimax_depth(atoi(arr[1]));
-		}
-		else if (strcmp(arr[0], "user_color") == 0)
-		{
-			if (strcmp(arr[1], "black") == 0)
-				computer_color = WHITE;
-			else if (strcmp(arr[1], "white") == 0)
-				computer_color = BLACK;
-		}
-		else if (strcmp(arr[0], "rm") == 0)
-		{
-			remove_disc(board, arr[1]);
-		}
-
-	}
-	else if (arr_len == 4 && strcmp(arr[0],"set") == 0)//set <x,y> a b
-	{ 
-		set_disc(board, arr[1], arr[2], arr[3]);
-	}
-	else
-	{
-		printf("%s", ILLEGAL_COMMAND);
-	}
-		
-
-	freeArray(arr, arr_len);
-}
 
 char* replace(char *s, char ch, char *repl) 
 {
@@ -249,9 +173,6 @@ char* replace(char *s, char ch, char *repl)
 	*ptr = 0;
 	return res;
 }
-
-
-
 
 //removes any leading/trailing whitespaces
 char *trimwhitespace(char *str)
@@ -456,7 +377,6 @@ void set_minimax_depth(int depth)
 		minimax_depth = depth;
 }
 
-
 /*
 recieves <x,y> string and return Pos object
 */
@@ -480,6 +400,7 @@ Pos * formatPos(char* pos_input)
 	
 	return pos;
 }
+
 void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input)
 {
 	//input is <x,y>
@@ -493,9 +414,8 @@ void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input)
 	//freeArray(arr, arr_len);
 }
 
-
 /*
-This function assumes the command is a valid move command, parses it and retuen a move object
+This function assumes the command is a valid move command, parses it and return a move object
 move <x,y> to <i,j>[<k,l>…]
 */
 Move * parseMoveCommand(char *command)
@@ -521,6 +441,8 @@ Move * parseMoveCommand(char *command)
 	int arrLen = split(command, ' ', &arr);
 
 	move->currPos  = formatPos(arr[1]);
+	if (move->currPos)//position was invalid
+		return NULL;
 	
 	char **destArr = NULL;
 	int destArrLen = split(arr[3], '>',&destArr);
@@ -530,6 +452,8 @@ Move * parseMoveCommand(char *command)
 	{
 		PosNode *posToAdd = malloc(sizeof(PosNode));
 		posToAdd->pos = formatPos(destArr[i]);
+		if (posToAdd->pos == NULL)
+			return NULL;
 		posToAdd->next = NULL;
 
 		if (i == 0)
@@ -790,5 +714,185 @@ int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char p
 		
 	}
 	return hasMove;
+
+}
+
+void settingState(char board[BOARD_SIZE][BOARD_SIZE])
+{
+	init_board(board);
+	printf("%s", ENTER_SETTINGS);
+	char *command = getString(stdin, 10);
+	while (strcmp(command, "quit") != 0 && strcmp(command, "start") != 0)
+	{
+		reduceSpaces(command);
+		executeSettingCmd(board, command);
+
+		command = getString(stdin, 10);
+	}
+	if (strcmp(command, "start") == 0)
+	{
+		//call game state on the board
+		GameState(board);
+	}
+	else if (strcmp(command, "quit") == 0)
+	{
+		//TODO:clean all memory
+		if (objectsInMemory > 0)
+			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
+
+		exit(0);
+	}
+
+}
+
+void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input)
+{
+	//trim all spaces from start and end:
+	input = trimwhitespace(input);
+	char **arr = NULL;
+	int arr_len = split(input, ' ', &arr);
+	if (arr_len == 1)//print,clear
+	{
+		if (strcmp(arr[0], "clear") == 0)
+		{
+			//call clear
+			clear_board(board);
+		}
+		else if (strcmp(arr[0], "print") == 0)
+		{
+			print_board(board);
+		}
+	}
+	else if (arr_len == 2)//rm <x,y>, user_color x, minimax_depth x
+	{
+		if (strcmp(arr[0], "minimax_depth") == 0)
+		{
+			set_minimax_depth(atoi(arr[1]));
+		}
+		else if (strcmp(arr[0], "user_color") == 0)
+		{
+			if (strcmp(arr[1], "black") == 0)
+				computer_color = WHITE;
+			else if (strcmp(arr[1], "white") == 0)
+				computer_color = BLACK;
+		}
+		else if (strcmp(arr[0], "rm") == 0)
+		{
+			remove_disc(board, arr[1]);
+		}
+
+	}
+	else if (arr_len == 4 && strcmp(arr[0], "set") == 0)//set <x,y> a b
+	{
+		set_disc(board, arr[1], arr[2], arr[3]);
+	}
+	else
+	{
+		printf("%s", ILLEGAL_COMMAND);
+	}
+
+
+	freeArray(arr, arr_len);
+}
+
+void GameState(char board[BOARD_SIZE][BOARD_SIZE])
+{
+	int resComputer = 0;
+	int resUser = 0;
+	int isComputerTurn;
+	//first turn
+	if (computer_color == WHITE)
+	{
+		resComputer = computerTurn(board);
+		if (resComputer == 1)
+			return;//computer won
+		else
+		{
+			resUser = userTurn(board);
+			isComputerTurn = 1;
+		}
+			
+	}
+	else //user starts
+	{
+		resUser = userTurn(board);
+		if (resUser == 1)
+			return;//user won
+		else
+		{
+			resComputer = computerTurn(board);
+			isComputerTurn = 0;
+		}
+			
+	}
+	while (resComputer != 1 && resUser != 1)//main loop of the game
+	{
+		if (isComputerTurn == 1)
+			resComputer = computerTurn(board);
+		else
+			resUser = userTurn(board);
+	}
+		
+
+}
+
+/*if computerTurn or playerTurn return 1 - they won otherwise return 0*/
+int computerTurn(char board[BOARD_SIZE][BOARD_SIZE])
+{
+	//Todo:call minimax algorithm
+	//perforam chosen  move
+	//if score is winning return 1 and print computer win!
+	return 0;
+}
+int userTurn(char board[BOARD_SIZE][BOARD_SIZE])
+{
+
+	printf("%s", ENTER_YOUR_MOVE);
+	char* command = getString(stdin, 10);
+	if (strstr(command, "move"))
+	{
+		Move *move = parseMoveCommand(command);
+		if (move != NULL)
+			performUserMove(board, *move);
+	}
+}
+
+int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
+{
+	char user_m;
+	char user_k;
+	char computer_m;
+	char computer_k;
+	if (computer_color == BLACK)
+	{
+		user_m = WHITE_M;
+		user_k = WHITE_K;
+		computer_m = BLACK_M;
+		computer_k = BLACK_K;
+	}
+	else
+	{
+		user_m = BLACK_M;
+		user_k = BLACK_K;
+		computer_k = WHITE_K;
+		computer_m = WHITE_M;
+	}
+	int x_int = getIntValue(move.currPos->x);
+	if (board[x_int][move.currPos->y - 1] != user_m || board[x_int][move.currPos->y - 1] != user_k)
+	{
+		printf("%s", NO_DICS);
+		return 0;
+	}
+	else if (checkMoveIsValid(board, move) == 0)
+	{
+		//move is not valid
+		printd("%s", ILLEGAL_MOVE);
+		return 0;
+	}
+
+}
+
+int checkMoveIsValid(char board[BOARD_SIZE][BOARD_SIZE], Move move)
+{
 
 }
