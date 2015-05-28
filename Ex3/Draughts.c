@@ -44,20 +44,64 @@ void *myRealloc(void  *memory, size_t newSize) {
 int minimax_depth = 1;
 int computer_color = BLACK;//by default the use played is white = 1
 
+struct PosNode{
+	Pos *pos;
+	PosNode *next;
+};
+
 struct Pos{
 	char x;
 	int y;
 };
 
 struct Move{
-	Pos currPos;
+	Pos *currPos;
 	int eat;
-	Move *next;
+	PosNode *dest;
 };
 
 int getIntValue(char c)
 {
 	return c - 'a';
+}
+
+char *str_replace(char *orig, char *rep, char *with) {
+	char *result; // the return string
+	char *ins;    // the next insert point
+	char *tmp;    // varies
+	int len_rep;  // length of rep
+	int len_with; // length of with
+	int len_front; // distance between rep and end of last rep
+	int count;    // number of replacements
+
+	if (!orig)
+		return NULL;
+	if (!rep)
+		rep = "";
+	len_rep = strlen(rep);
+	if (!with)
+		with = "";
+	len_with = strlen(with);
+
+	ins = orig;
+	for (count = 0; (tmp = strstr(ins, rep)); ++count) {
+		ins = tmp + len_rep;
+	}
+
+	tmp = result = malloc(strlen(orig) + (len_with - len_rep) * count + 1);
+
+	if (!result)
+		return NULL;
+
+	while (count--) {
+		ins = strstr(orig, rep);
+		len_front = ins - orig;
+		tmp = strncpy(tmp, orig, len_front) + len_front;
+		tmp = strcpy(tmp, with) + len_with;
+		orig += len_front + len_rep;
+	}
+	strcpy(tmp, orig);
+	return result;
 }
 
 /*
@@ -87,24 +131,14 @@ char* getString(FILE* fp, size_t size)
 }
 
 
-int main()
-{
-	char board[BOARD_SIZE][BOARD_SIZE];
 	
-	printf("%s", WELCOME_TO_DRAUGHTS);
-	settingState(board);
-
-	//print_message(WRONG_MINIMAX_DEPTH);
-	//perror_message("TEST");
-	return 0;
-}
 
 void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 {
 	init_board(board);
 	printf("%s", ENTER_SETTINGS);
 	char *command = getString(stdin, 10);
-	while (strcmp(command, "quit") != 0 || strcmp(command, "start") != 0)
+	while (strcmp(command, "quit") != 0 && strcmp(command, "start") != 0)
 	{
 		reduceSpaces(command);
 		executeSettingCmd(board, command);
@@ -206,6 +240,9 @@ char* replace(char *s, char ch, char *repl)
 }
 
 
+
+
+//removes any leading/trailing whitespaces
 char *trimwhitespace(char *str)
 {
 	char *end;
@@ -409,61 +446,143 @@ void set_minimax_depth(int depth)
 }
 
 
-int formatPos(char* pos_input, char ***arr)
+/*
+recieves <x,y> string and return Pos object
+*/
+Pos * formatPos(char* pos_input)
 {
+	char **arr = NULL;
+	Pos* pos = malloc(sizeof(Pos));
 	pos_input = replace(pos_input, '<', "");
 	pos_input = replace(pos_input, '>', "");
-	int arr_len = split(pos_input, ',', arr);
-	return arr_len;
+	int arr_len = split(pos_input, ',', &arr);
+	pos->x = arr[0][0];
+	pos->y = atoi(arr[1]);
+	freeArray(arr, arr_len);
+
+	
+	if (pos->x < 97 || pos->x > 106 || pos->y<1 || pos->y>10)
+	{
+		printf("%s", WRONG_POSITION);
+		return NULL; //todo - is this OK? should be handled by caller?
+	}
+	
+	return pos;
 }
 void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input)
 {
 	//input is <x,y>
-	char **arr = NULL;
-	int arr_len = formatPos(input, &arr);
-	char x = arr[0][0];
-	int y = atoi(arr[1]);
-	if (x < 97 || x > 106 || y<1 || y>10 || y % 2 == 0)
+	//char **arr = NULL;
+	Pos *pos = formatPos(input);
+	//char x = arr[0][0];
+	//int y = atoi(arr[1]);
+
+	if (!pos)
 	{
-		printf("%s", WRONG_POSITION);
+		//todo - ???
 	}
 	else
 	{
-		int x_int = getIntValue(x);
-		board[x_int][y-1] = EMPTY;
+		int x_int = getIntValue(pos->x);
+		board[x_int][pos->y-1] = EMPTY;
 	}
-	freeArray(arr, arr_len);
+	//freeArray(arr, arr_len);
+}
+
+
+/*
+This function assumes the command is a valid move command, parses it and retuen a move object
+move <x,y> to <i,j>[<k,l>…]
+*/
+Move * parseMoveCommand(char *command)
+{
+	trimwhitespace(command);
+
+	//remove double spaces
+	char *toFree = NULL;
+	int cnt = 0;
+	while (strstr(command, "  "))
+	{
+		cnt++;
+		toFree = command;
+		command = str_replace(command, "  ", " ");
+		if (command != NULL && cnt>1)
+			free(toFree);
+	}
+
+	Move *move = (Move*) malloc(sizeof(Move));
+	//TODO trim and remove double spcaes
+
+	char** arr = NULL;
+	int arrLen = split(command, ' ', &arr);
+
+	move->currPos  = formatPos(arr[1]);
+	
+	PosNode *lastPos = NULL;
+	for (int i = 0; i < arrLen - 3; i++)
+	{
+		PosNode *posToAdd = malloc(sizeof(PosNode));
+		posToAdd->pos =  formatPos(arr[i + 3]);
+		posToAdd->next = NULL;
+
+		if (i == 0)
+		{
+			move->dest = posToAdd;
+			lastPos = posToAdd;
+		}
+		else
+			lastPos->next = posToAdd;
+	}
+
+	return move;
 }
 
 void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color, char* type)
 {
-	char **arr = NULL;
-	int arr_len = formatPos(pos_input, &arr);
-	char x = arr[0][0];
-	int y = atoi(arr[1]);
-	if (x < 97 || x > 106 || y<1 || y>10 || y % 2 == 0)
+	//char **arr = NULL;
+	Pos *pos = formatPos(pos_input);
+	//char x = arr[0][0];
+	//int y = atoi(arr[1]);
+	if (pos == NULL)
 	{
 		printf("%s", WRONG_POSITION);
 	}
 	else
 	{
-		int x_int = getIntValue(x);
+		int x_int = getIntValue(pos->x);
 		if (strcmp(color, "black") == 0)
 		{
 			if (strcmp(type, "k") == 0)
-				board[x_int][y - 1] = BLACK_K;
+				board[x_int][pos->y - 1] = BLACK_K;
 			else if (strcmp(type, "m") == 0)
-				board[x_int][y - 1] = BLACK_M;
+				board[x_int][pos->y - 1] = BLACK_M;
 		}
 		else if (strcmp(color, "white") == 0)
 		{
 			if (strcmp(type, "k") == 0)
-				board[x_int][y - 1] = WHITE_K;
+				board[x_int][pos->y - 1] = WHITE_K;
 			else if (strcmp(type, "m") == 0)
-				board[x_int][y - 1] = WHITE_M;
+				board[x_int][pos->y - 1] = WHITE_M;
+		}
 		}
 	}
+
+void unitTests()
+{
+	char *cmd = "move <b,3> to <a,2>";
+	Move *res = parseMoveCommand(cmd);
+	assert(res->currPos->x == 'b' && res->currPos->y == 3);
+	assert(res->dest->pos->x == 'a' && res->dest->pos->y == 2);
+	free(res);
+
+	char *cmd2 = "move <j,10> to <a,3>";
+	res = parseMoveCommand(cmd2);
+	assert(res->currPos->x == 'j' && res->currPos->y == 10);
+	free(res);
+	
+
 }
+
 
 int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
 {
@@ -473,3 +592,111 @@ int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
 	}
 
 }
+int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int player_colore)
+{
+	char player_man;
+	char player_king;
+	char opponent_man;
+	char opponent_king;
+	int hasMoves = 0;//will change to 1 if we find one single move
+	int
+
+	if (player_colore == WHITE)
+	{
+		player_man = WHITE_M;
+		player_king = WHITE_K;
+		opponent_man = BLACK_M;
+		opponent_king = BLACK_K;
+
+	}
+	else
+	{
+		player_man = BLACK_M;
+		player_king = BLACK_K;
+		opponent_man = WHITE_M;
+		opponent_king = WHITE_K;
+	}
+	//scan all diagonals, find a white player and check all his close moves
+	int i, j;
+	for (i = 0; i < BOARD_SIZE; i++)
+	{
+		for (j = 0; j < BOARD_SIZE; j++)
+		{
+			if ((i + j) % 2 == 0)
+			{
+				if (board[i][j] == player_man)
+				{
+					if (checkClosedMovesMan(board, i, j, player_man, opponent_man) == 1)
+						hasMoves = 1;
+
+				}
+				else if (board[i][j] == player_king)
+				{
+					if (checkClosedMovesKing(board, i, j, player_man, player_king, opponent_king) == 1)
+						hasMoves = 1;
+				}
+			}
+		}
+	}
+	return hasMoves;
+
+}
+
+int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent)
+{
+	int hasMove = 0;
+	if (i == 0 && j == 0)//left bottom
+	{
+		if (board[i + 1][j + 1] == EMPTY)
+			hasMove = 1;
+		else if (board[i + 1][j + 1] == opponent && board[i + 2][j + 2] == EMPTY)
+			hasMove = 1;
+	}
+	else if (i == 9 && j == 9)//right upper
+	{
+		if (board[i - 1][j - 1] == EMPTY)
+			hasMove = 1;
+		else if (board[i - 1][j - 1] == opponent && board[i - 2][j - 2] == EMPTY)
+			hasMove = 1;
+	}
+	else if (j == 0)//the man is in the first line
+	{
+		if (board[i - 1][j + 1] == EMPTY || board[i + 1][j + 1] == EMPTY)
+			hasMove = 1;
+		if (board[i - 1][j + 1] == opponent && board[i - 2][j + 2] == EMPTY)
+			hasMove = 1;
+		if (board[i + 1][j + 1] == opponent && board[i + 2][j + 2] == EMPTY && i != 8)
+			hasMove = 1;
+
+	}
+	else if (j == 9)
+	{
+		if (board[i - 1][j - 1] == EMPTY || board[i + 1][j - 1] == EMPTY)
+			hasMove = 1;
+		if (board[i - 1][j - 1] == opponent && board[i - 2][j - 2] == EMPTY && i != 1)
+			hasMove = 1;
+		if (board[i + 1][j - 1] == opponent && board[i + 2][j - 2] == EMPTY)
+			hasMove = 1;
+	}
+	else if (i == 0)
+	{
+
+	}
+	else if (i == 9)
+	{
+
+	}
+	else
+	{
+		if (board[i - 1][j - 1] == EMPTY || board[i + 1][j - 1] == EMPTY || board[i - 1][j + 1] == EMPTY || board[i + 1][j + 1] == EMPTY)
+			hasMove = 1;
+
+	}
+
+}
+
+int checkClosedMovesKing(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent)
+{
+
+}
+

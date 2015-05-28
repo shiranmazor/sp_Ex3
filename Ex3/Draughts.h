@@ -30,6 +30,7 @@ typedef char** board_t;
 
 
 typedef struct Pos Pos;
+typedef struct PosNode PosNode;
 typedef struct Move Move;
 int getIntValue(char c);
 int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int color);
@@ -41,7 +42,7 @@ void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input);
 void freeArray(char** arrMul, int c);
 void reduceSpaces(char *str);
 char* replace(char *s, char ch, char *repl);
-int formatPos(char* pos_input, char **arr);
+Pos * formatPos(char* pos_input);
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE]);
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
@@ -50,5 +51,8 @@ void set_minimax_depth(int depth);
 void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input);
 void set_disc(char board[BOARD_SIZE][BOARD_SIZE], char* pos_input, char* color, char* type);
 int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color);
+int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int player_colore);
+int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent);
+int checkClosedMovesKing(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent);
 
 #endif  
