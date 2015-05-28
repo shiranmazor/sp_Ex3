@@ -472,7 +472,7 @@ Pos * formatPos(char* pos_input)
 	freeArray(arr, arr_len);
 
 	
-	if (pos->x < 97 || pos->x > 106 || pos->y<1 || pos->y>10)
+	if (pos->x < 97 || pos->x > 106 || pos->y<1 || pos->y>10 || ((pos->x+pos->y) %2 !=0))
 	{
 		printf("%s", WRONG_POSITION);
 		return NULL; //todo - is this OK? should be handled by caller?
@@ -483,16 +483,9 @@ Pos * formatPos(char* pos_input)
 void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input)
 {
 	//input is <x,y>
-	//char **arr = NULL;
 	Pos *pos = formatPos(input);
-	//char x = arr[0][0];
-	//int y = atoi(arr[1]);
 
-	if (!pos)
-	{
-		//todo - ???
-	}
-	else
+	if (pos)
 	{
 		int x_int = getIntValue(pos->x);
 		board[x_int][pos->y-1] = EMPTY;
@@ -575,8 +568,8 @@ void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color,
 			else if (strcmp(type, "m") == 0)
 				board[x_int][pos->y - 1] = WHITE_M;
 		}
-		}
 	}
+}
 
 void unitTests()
 {
@@ -597,27 +590,22 @@ void unitTests()
 
 int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
 {
-	if (player_color == WHITE)
-	{
-
-	}
-
-}
-int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int player_colore)
-{
+	int score = 0;
 	char player_man;
 	char player_king;
 	char opponent_man;
 	char opponent_king;
-	int hasMoves = 0;//will change to 1 if we find one single move
-	
+	char* direction;
+	char* opponent_direction;
 
-	if (player_colore == WHITE)
+	if (player_color == WHITE)
 	{
 		player_man = WHITE_M;
 		player_king = WHITE_K;
 		opponent_man = BLACK_M;
 		opponent_king = BLACK_K;
+		direction = "up";
+		opponent_direction = "down";
 
 	}
 	else
@@ -626,7 +614,53 @@ int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int player_colore)
 		player_king = BLACK_K;
 		opponent_man = WHITE_M;
 		opponent_king = WHITE_K;
+		direction = "down";
+		opponent_direction = "up";
 	}
+	//check if the player or the oponent stuck
+	if (isPlayerStuck(board, player_man, player_king, opponent_man, opponent_king, direction) == 0)//we are stuck loose
+		score = -100;
+	else if (isPlayerStuck(board, opponent_man, opponent_king, player_man, player_king, opponent_direction) == 0)//opponent stuck we win
+		score == 100;
+	else
+	{
+		int player_counter = 0;
+		int opponent_counter = 0;
+		int i, j;
+		for (i = 0; i < BOARD_SIZE; i++)
+		{
+			for (j = 0; j < BOARD_SIZE; j++)
+			{
+				if ((i + j) % 2 == 0)
+				{
+					if (board[i][j] == player_man)
+						player_counter++;
+					if (board[i][j] == player_king)
+						player_counter = player_counter + 3;
+					if (board[i][j] == opponent_man)
+						opponent_counter++;
+					if (board[i][j] == opponent_king)
+						opponent_counter = player_counter + 3;
+				}
+			}
+		}
+		//end loops
+		if (player_counter == 0)
+			score = -100;
+		else if (opponent_counter == 0)
+			score = 100;
+		else
+			score = player_counter - opponent_counter;
+	}
+	return score;	
+
+}
+int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], char player_man, char player_king, char opponent_man
+, char opponent_king, char* direction)
+{
+
+	int hasMoves = 0;//will change to 1 if we find one single move
+
 	//scan all diagonals, find a white player and check all his close moves
 	int i, j;
 	for (i = 0; i < BOARD_SIZE; i++)
@@ -637,13 +671,13 @@ int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int player_colore)
 			{
 				if (board[i][j] == player_man)
 				{
-					if (checkClosedMovesMan(board, i, j, player_man, opponent_man) == 1)
+					if (checkClosedMovesMan(board, i, j, player_man, opponent_man, opponent_king, direction, 0) ==1)
 						hasMoves = 1;
 
 				}
 				else if (board[i][j] == player_king)
 				{
-					if (checkClosedMovesKing(board, i, j, player_man, player_king, opponent_king) == 1)
+					if (checkClosedMovesMan(board, i, j, player_man, opponent_man, opponent_king, direction, 1) == 1)
 						hasMoves = 1;
 				}
 			}
@@ -653,61 +687,94 @@ int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int player_colore)
 
 }
 
-int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent)
+int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, 
+	char opponentM, char opponentK, char* direction, int king)
 {
 	int hasMove = 0;
-	if (i == 0 && j == 0)//left bottom
+	if ((strcmp(direction, "up") == 0) || king ==1)// j!=9 always because it's not a king
 	{
-		if (board[i + 1][j + 1] == EMPTY)
-			hasMove = 1;
-		else if (board[i + 1][j + 1] == opponent && board[i + 2][j + 2] == EMPTY)
-			hasMove = 1;
-	}
-	else if (i == 9 && j == 9)//right upper
-	{
-		if (board[i - 1][j - 1] == EMPTY)
-			hasMove = 1;
-		else if (board[i - 1][j - 1] == opponent && board[i - 2][j - 2] == EMPTY)
-			hasMove = 1;
-	}
-	else if (j == 0)//the man is in the first line
-	{
-		if (board[i - 1][j + 1] == EMPTY || board[i + 1][j + 1] == EMPTY)
-			hasMove = 1;
-		if (board[i - 1][j + 1] == opponent && board[i - 2][j + 2] == EMPTY)
-			hasMove = 1;
-		if (board[i + 1][j + 1] == opponent && board[i + 2][j + 2] == EMPTY && i != 8)
-			hasMove = 1;
+		if (i == 0 && j == 0)//left bottom
+		{
+			if (board[i + 1][j + 1] == EMPTY)//move forward
+				hasMove = 1;
+			else if ((board[i + 1][j + 1] == opponentM || board[i + 1][j + 1] == opponentK) && board[i + 2][j + 2] == EMPTY)//eeating forward
+				hasMove = 1;
+		}
+		else if (i == 0)
+		{
+			if (board[i + 1][j + 1] == EMPTY)//move forward
+				hasMove = 1;
+			else if ((board[i + 1][j + 1] == opponentM || board[i + 1][j + 1] == opponentK) && board[i + 2][j + 2] == EMPTY) //eating forward
+				hasMove = 1;
+			if ((board[i + 1][j - 1] == opponentM || board[i + 1][j - 1] == opponentK) && board[i + 2][j - 2] == EMPTY && j != 8)//eating backward
+				hasMove = 1;
+		}
+		else if (i == 9)
+		{
+			if (board[i - 1][j + 1] == EMPTY)//move forward
+				hasMove = 1;
+			else if ((board[i - 1][j + 1] == opponentM || board[i - 1][j + 1] == opponentK) && board[i - 2][j + 2] == EMPTY && j != 1) // eating forward
+				hasMove = 1;
+			if ((board[i - 1][j - 1] == opponentM || board[i - 1][j - 1] == opponentM) && board[i - 2][j - 2] == EMPTY && j != 8)//eating backward
+				hasMove = 1;
+		}
+		else 
+		{
+			if (board[i - 1][j + 1] == EMPTY || board[i + 1][j + 1] == EMPTY)//move forward
+				hasMove = 1;
+			if ((board[i - 1][j + 1] == opponentM || board[i - 1][j + 1] == opponentK) && board[i - 2][j + 2] == EMPTY && i != 1)//eat forward
+				hasMove = 1;
+			if ((board[i + 1][j + 1] == opponentM || board[i + 1][j + 1] == opponentK) && board[i + 2][j + 2] == EMPTY && i != 8)//eat forward
+				hasMove = 1;
+			if ((board[i - 1][j - 1] == opponentM || board[i - 1][j - 1] == opponentK) && board[i - 2][j - 2] == EMPTY && i != 1)//eat backward
+				hasMove = 1;
+			if ((board[i + 1][j - 1] == opponentM || board[i + 1][j - 1] == opponentK) && board[i + 2][j - 2] == EMPTY && i != 8)//eat backward
+				hasMove = 1;
 
+		}
 	}
-	else if (j == 9)
+	else if (strcmp(direction,"down") == 0 || king ==1) // direction is down j !=0 always
 	{
-		if (board[i - 1][j - 1] == EMPTY || board[i + 1][j - 1] == EMPTY)
-			hasMove = 1;
-		if (board[i - 1][j - 1] == opponent && board[i - 2][j - 2] == EMPTY && i != 1)
-			hasMove = 1;
-		if (board[i + 1][j - 1] == opponent && board[i + 2][j - 2] == EMPTY)
-			hasMove = 1;
+		if (i == 9 && j == 9)//right upper
+		{
+			if (board[i - 1][j - 1] == EMPTY)
+				hasMove = 1;
+			else if ((board[i - 1][j - 1] == opponentM || board[i - 1][j - 1] == opponentK) && board[i - 2][j - 2] == EMPTY)
+				hasMove = 1;
+		}	
+		else if (i == 0)//first column , j!=0 beacuse it's a man not a king
+		{
+			if (board[i + 1][j - 1] == EMPTY)//move forward
+				hasMove = 1;
+			else if ((board[i + 1][j - 1] == opponentM || board[i + 1][j - 1] == opponentK) && board[i + 2][j - 2] == EMPTY) //eating forward
+				hasMove = 1;
+			if ((board[i + 1][j + 1] == opponentM || board[i + 1][j + 1] == opponentK ) && board[i + 2][j + 2] == EMPTY && j != 8)//eating backward
+				hasMove = 1;
+		}
+		else if (i == 9)//last colum
+		{
+			if (board[i - 1][j - 1] == EMPTY)//move forward
+				hasMove = 1;
+			else if ((board[i - 1][j - 1] == opponentM || board[i - 1][j - 1] == opponentK) && board[i - 2][j - 2] == EMPTY && j != 1) // eating forward
+				hasMove = 1;
+			if ((board[i - 1][j + 1] == opponentM || oard[i - 1][j + 1] == opponentK) && board[i - 2][j + 2] == EMPTY && j != 8)//eating backward
+				hasMove = 1;
+		}
+		else 
+		{
+			if (board[i - 1][j - 1] == EMPTY || board[i + 1][j - 1] == EMPTY)//move forward
+				hasMove = 1;
+			if ((board[i - 1][j - 1] == opponentM || board[i - 1][j - 1] == opponentK) && board[i - 2][j - 2] == EMPTY && j != 1)//eating forward
+				hasMove = 1;
+			if ((board[i + 1][j - 1] == opponentM || board[i + 1][j - 1] == opponentK) && board[i + 2][j - 2] == EMPTY && j != 1)//eating forward
+				hasMove = 1;
+			if ((board[i - 1][j + 1] == opponentM || board[i - 1][j + 1] == opponentK) && board[i - 2][j + 2] == EMPTY && j != 8)//eating backward
+				hasMove = 1;
+			if ((board[i + 1][j + 1] == opponentM || board[i + 1][j + 1] == opponentK) && board[i + 2][j + 2] == EMPTY && j != 8)//eating backward
+				hasMove = 1;
+		}
+		
 	}
-	else if (i == 0)
-	{
-
-	}
-	else if (i == 9)
-	{
-
-	}
-	else
-	{
-		if (board[i - 1][j - 1] == EMPTY || board[i + 1][j - 1] == EMPTY || board[i - 1][j + 1] == EMPTY || board[i + 1][j + 1] == EMPTY)
-			hasMove = 1;
-
-	}
+	return hasMove;
 
 }
-
-int checkClosedMovesKing(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent)
-{
-
-}
-
