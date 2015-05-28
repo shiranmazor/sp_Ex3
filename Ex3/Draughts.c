@@ -889,6 +889,8 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 		printd("%s", ILLEGAL_MOVE);
 		return 0;
 	}
+	//perform moves - if we eat set empty at opponent
+	//only one pos
 
 }
 
