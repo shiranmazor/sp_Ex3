@@ -131,7 +131,18 @@ char* getString(FILE* fp, size_t size)
 }
 
 
-	
+int main()
+{
+	char board[BOARD_SIZE][BOARD_SIZE];
+
+	printf("%s", WELCOME_TO_DRAUGHTS);
+	settingState(board);
+
+	//print_message(WRONG_MINIMAX_DEPTH);
+	//perror_message("TEST");
+	return 0;
+}
+
 
 void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 {
@@ -599,7 +610,7 @@ int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int player_colore)
 	char opponent_man;
 	char opponent_king;
 	int hasMoves = 0;//will change to 1 if we find one single move
-	int
+	
 
 	if (player_colore == WHITE)
 	{
