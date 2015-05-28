@@ -30,6 +30,7 @@ typedef char** board_t;
 
 
 typedef struct Pos Pos;
+typedef struct PosNode PosNode;
 typedef struct Move Move;
 int getIntValue(char c);
 int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int color);
@@ -41,7 +42,7 @@ void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input);
 void freeArray(char** arrMul, int c);
 void reduceSpaces(char *str);
 char* replace(char *s, char ch, char *repl);
-int formatPos(char* pos_input, char **arr);
+Pos * formatPos(char* pos_input);
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE]);
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
