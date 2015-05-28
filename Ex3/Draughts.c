@@ -771,7 +771,7 @@ int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char p
 				hasMove = 1;
 			else if ((board[i - 1][j - 1] == opponentM || board[i - 1][j - 1] == opponentK) && board[i - 2][j - 2] == EMPTY && j != 1) // eating forward
 				hasMove = 1;
-			if ((board[i - 1][j + 1] == opponentM || oard[i - 1][j + 1] == opponentK) && board[i - 2][j + 2] == EMPTY && j != 8)//eating backward
+			if ((board[i - 1][j + 1] == opponentM || board[i - 1][j + 1] == opponentK) && board[i - 2][j + 2] == EMPTY && j != 8)//eating backward
 				hasMove = 1;
 		}
 		else 
