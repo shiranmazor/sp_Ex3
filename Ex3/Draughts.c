@@ -56,7 +56,7 @@ struct Pos{
 
 struct Move{
 	Pos *currPos;
-	int eat; 
+	int eat;
 	PosNode *dest;
 };
 
@@ -131,6 +131,17 @@ char* getString(FILE* fp, size_t size)
 }
 
 
+int main()
+{
+	char board[BOARD_SIZE][BOARD_SIZE];
+
+	printf("%s", WELCOME_TO_DRAUGHTS);
+	settingState(board);
+
+	//print_message(WRONG_MINIMAX_DEPTH);
+	//perror_message("TEST");
+	return 0;
+}
 
 
 void settingState(char board[BOARD_SIZE][BOARD_SIZE])
@@ -138,7 +149,7 @@ void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 	init_board(board);
 	printf("%s", ENTER_SETTINGS);
 	char *command = getString(stdin, 10);
-	while (strcmp(command, "quit") != 0 || strcmp(command, "start") != 0)
+	while (strcmp(command, "quit") != 0 && strcmp(command, "start") != 0)
 	{
 		reduceSpaces(command);
 		executeSettingCmd(board, command);
@@ -570,8 +581,8 @@ void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color,
 			else if (strcmp(type, "m") == 0)
 				board[x_int][pos->y - 1] = WHITE_M;
 		}
+		}
 	}
-}
 
 void unitTests()
 {
@@ -597,15 +608,120 @@ void unitTests()
 
 }
 
-int main()
+
+int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
 {
-	unitTests();
-	char board[BOARD_SIZE][BOARD_SIZE];
+	if (player_color == WHITE)
+	{
 
-	printf("%s", WELCOME_TO_DRAUGHTS);
-	settingState(board);
+	}
 
-	//print_message(WRONG_MINIMAX_DEPTH);
-	//perror_message("TEST");
-	return 0;
 }
+int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int player_colore)
+{
+	char player_man;
+	char player_king;
+	char opponent_man;
+	char opponent_king;
+	int hasMoves = 0;//will change to 1 if we find one single move
+	
+
+	if (player_colore == WHITE)
+	{
+		player_man = WHITE_M;
+		player_king = WHITE_K;
+		opponent_man = BLACK_M;
+		opponent_king = BLACK_K;
+
+	}
+	else
+	{
+		player_man = BLACK_M;
+		player_king = BLACK_K;
+		opponent_man = WHITE_M;
+		opponent_king = WHITE_K;
+	}
+	//scan all diagonals, find a white player and check all his close moves
+	int i, j;
+	for (i = 0; i < BOARD_SIZE; i++)
+	{
+		for (j = 0; j < BOARD_SIZE; j++)
+		{
+			if ((i + j) % 2 == 0)
+			{
+				if (board[i][j] == player_man)
+				{
+					if (checkClosedMovesMan(board, i, j, player_man, opponent_man) == 1)
+						hasMoves = 1;
+
+				}
+				else if (board[i][j] == player_king)
+				{
+					if (checkClosedMovesKing(board, i, j, player_man, player_king, opponent_king) == 1)
+						hasMoves = 1;
+				}
+			}
+		}
+	}
+	return hasMoves;
+
+}
+
+int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent)
+{
+	int hasMove = 0;
+	if (i == 0 && j == 0)//left bottom
+	{
+		if (board[i + 1][j + 1] == EMPTY)
+			hasMove = 1;
+		else if (board[i + 1][j + 1] == opponent && board[i + 2][j + 2] == EMPTY)
+			hasMove = 1;
+	}
+	else if (i == 9 && j == 9)//right upper
+	{
+		if (board[i - 1][j - 1] == EMPTY)
+			hasMove = 1;
+		else if (board[i - 1][j - 1] == opponent && board[i - 2][j - 2] == EMPTY)
+			hasMove = 1;
+	}
+	else if (j == 0)//the man is in the first line
+	{
+		if (board[i - 1][j + 1] == EMPTY || board[i + 1][j + 1] == EMPTY)
+			hasMove = 1;
+		if (board[i - 1][j + 1] == opponent && board[i - 2][j + 2] == EMPTY)
+			hasMove = 1;
+		if (board[i + 1][j + 1] == opponent && board[i + 2][j + 2] == EMPTY && i != 8)
+			hasMove = 1;
+
+	}
+	else if (j == 9)
+	{
+		if (board[i - 1][j - 1] == EMPTY || board[i + 1][j - 1] == EMPTY)
+			hasMove = 1;
+		if (board[i - 1][j - 1] == opponent && board[i - 2][j - 2] == EMPTY && i != 1)
+			hasMove = 1;
+		if (board[i + 1][j - 1] == opponent && board[i + 2][j - 2] == EMPTY)
+			hasMove = 1;
+	}
+	else if (i == 0)
+	{
+
+	}
+	else if (i == 9)
+	{
+
+	}
+	else
+	{
+		if (board[i - 1][j - 1] == EMPTY || board[i + 1][j - 1] == EMPTY || board[i - 1][j + 1] == EMPTY || board[i + 1][j + 1] == EMPTY)
+			hasMove = 1;
+
+	}
+
+}
+
+int checkClosedMovesKing(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent)
+{
+
+}
+

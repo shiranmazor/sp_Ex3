@@ -50,5 +50,9 @@ void clear_board(char board[BOARD_SIZE][BOARD_SIZE]);
 void set_minimax_depth(int depth);
 void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input);
 void set_disc(char board[BOARD_SIZE][BOARD_SIZE], char* pos_input, char* color, char* type);
+int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color);
+int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int player_colore);
+int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent);
+int checkClosedMovesKing(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, char opponent);
 
 #endif  
