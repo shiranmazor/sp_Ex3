@@ -518,20 +518,26 @@ Move * parseMoveCommand(char *command)
 
 	move->currPos  = formatPos(arr[1]);
 	
+	char **destArr = NULL;
+	int destArrLen = split(arr[3], '>',&destArr);
+
 	PosNode *lastPos = NULL;
-	for (int i = 0; i < arrLen - 3; i++)
+	for (int i = 0; i < destArrLen-1; i++)
 	{
 		PosNode *posToAdd = malloc(sizeof(PosNode));
-		posToAdd->pos =  formatPos(arr[i + 3]);
+		posToAdd->pos = formatPos(destArr[i]);
 		posToAdd->next = NULL;
 
 		if (i == 0)
 		{
 			move->dest = posToAdd;
-			lastPos = posToAdd;
+			lastPos = move->dest;
 		}
 		else
+		{
 			lastPos->next = posToAdd;
+			lastPos = lastPos->next;
+		}
 	}
 
 	return move;
@@ -569,17 +575,25 @@ void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color,
 
 void unitTests()
 {
-	char *cmd = "move <b,3> to <a,2>";
+	char cmd[] = "move <b,3> to <a,2>";
+	trimwhitespace(cmd);
 	Move *res = parseMoveCommand(cmd);
 	assert(res->currPos->x == 'b' && res->currPos->y == 3);
 	assert(res->dest->pos->x == 'a' && res->dest->pos->y == 2);
 	free(res);
 
-	char *cmd2 = "move <j,10> to <a,3>";
+	char cmd2[] = "move <j,10> to <a,3>";
 	res = parseMoveCommand(cmd2);
 	assert(res->currPos->x == 'j' && res->currPos->y == 10);
 	free(res);
 	
+	char cmd3[] = "move <j,10> to <a,3><b,10><c,8>";
+	res = parseMoveCommand(cmd3);
+	assert(res->currPos->x == 'j' && res->currPos->y == 10);
+	assert(res->dest->pos->x == 'a' && res->dest->pos->y == 3);
+	assert(res->dest->next->pos->x == 'b' && res->dest->next->pos->y == 10);
+	assert(res->dest->next->next->pos->x == 'c' && res->dest->next->next->pos->y == 8);
+	free(res);
 
 }
 
