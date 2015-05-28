@@ -6,6 +6,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int objectsInMemory = 0;
+void *myMalloc(size_t size) {
+	//printf("allocated memory!\n");
+	objectsInMemory++;
+	return malloc(size);
+}
+
+void myFree(void  *memory) {
+	if (memory == NULL)
+		return;
+	objectsInMemory--;
+	//printf("freed memory!\n");
+	//printf("%p\n", memory);
+	free(memory);
+}
+
+void *myCalloc(void  *memory, size_t size) {
+	objectsInMemory++;
+	//printf("calloced memory!\n");
+	return calloc(memory, size);
+}
+
+void *myRealloc(void  *memory, size_t newSize) {
+	if (memory == NULL)
+		objectsInMemory++;
+	//printf("relloced memory!\n");
+	return realloc(memory, newSize);
+}
+
+#define malloc(x) myMalloc(x)
+#define free(x) myFree(x)
+#define calloc(x,y) myCalloc(x,y)
+#define realloc(x,y) myRealloc(x,y)
 
 //globals:
 int minimax_depth = 1;
@@ -85,6 +118,9 @@ void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 	else if(strcmp(command, "quit") == 0)
 	{
 		//TODO:clean all memory
+		if (objectsInMemory > 0)
+			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
+
 		exit(0);
 	}
 
