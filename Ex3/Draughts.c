@@ -886,7 +886,7 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 	else if (checkMoveIsValid(board, move) == 0)
 	{
 		//move is not valid
-		printd("%s", ILLEGAL_MOVE);
+		printf("%s", ILLEGAL_MOVE);
 		return 0;
 	}
 	//perform moves - if we eat set empty at opponent
