@@ -345,6 +345,7 @@ void print_line(){
 }
 
 
+
 MoveNode * getMoves(char userM, char userK)
 {
 	MoveNode *firstMoveNode = NULL;
@@ -384,6 +385,10 @@ MoveNode * getMoves(char userM, char userK)
 	return firstMoveNode;
 }
 
+MoveNode *getAdjPositions(Pos pos)
+{
+
+}
 
 MoveNode *getKingMoves(int x, int y)
 {
