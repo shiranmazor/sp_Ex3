@@ -44,12 +44,14 @@ void *myRealloc(void  *memory, size_t newSize) {
 int minimax_depth = 1;
 int computer_color = BLACK;//by default the use played is white = 1
 
-struct PosNode{
+struct PosNode
+{
 	Pos *pos;
 	PosNode *next;
 };
 
-struct Pos{
+struct Pos
+{
 	char x;
 	int y;
 };
@@ -593,6 +595,7 @@ int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
 	return score;	
 
 }
+
 int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], char player_man, char player_king, char opponent_man
 , char opponent_king, char* direction)
 {
@@ -864,10 +867,12 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 	char user_k;
 	char computer_m;
 	char computer_k;
+	char* user_direction;
 	if (computer_color == BLACK)
 	{
 		user_m = WHITE_M;
 		user_k = WHITE_K;
+		user_direction = "up";
 		computer_m = BLACK_M;
 		computer_k = BLACK_K;
 	}
@@ -875,6 +880,7 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 	{
 		user_m = BLACK_M;
 		user_k = BLACK_K;
+		user_direction = "down";
 		computer_k = WHITE_K;
 		computer_m = WHITE_M;
 	}
@@ -884,7 +890,7 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 		printf("%s", NO_DICS);
 		return 0;
 	}
-	else if (checkMoveIsValid(board, move) == 0)
+	else if (checkMoveIsValidM(board, move, user_direction, user_m, user_k, computer_m, computer_k) == 0)
 	{
 		//move is not valid
 		printf("%s", ILLEGAL_MOVE);
@@ -895,7 +901,68 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 
 }
 
-int checkMoveIsValid(char board[BOARD_SIZE][BOARD_SIZE], Move move)
+int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction, char playerM ,char playerK, char oponentM, char opponentK)
 {
+	//no need to check pos border because we already check it in parse move
+	int valid = 0;
+	int eat = 0;
+	Pos *currPos = move.currPos;
+	Pos *nextPos = move.dest->pos;
+
+	int curr_x_int = getIntValue(currPos->x);
+	int next_int_x= getIntValue(nextPos->x);
+
+	//check if we eat or not - we have more then one eat
+	if (move.dest->next != NULL)
+		eat = 1;
+	if (abs(curr_x_int - next_int_x) == 1 && abs(currPos->y - nextPos->y) == 1)//single move no eat
+	{
+		if (strcmp(direction, "up") == 0)
+		{
+			if (next_int_x == curr_x_int + 1 && nextPos->y == currPos->y + 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
+				valid == 1;
+			if (next_int_x == curr_x_int - 1 && nextPos->y == currPos->y + 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
+				valid == 1;
+		}
+		else//user us going down
+		{
+			if (next_int_x == curr_x_int - 1 && nextPos->y == currPos->y - 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
+				valid == 1;
+			if (next_int_x == curr_x_int + 1 && nextPos->y == currPos->y - 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
+				valid == 1;
+		}
+		return valid;
+	}
+
+	else if (eat == 1 || (abs(curr_x_int - next_int_x) == 2 && abs(currPos->y - nextPos->y) == 2))
+	{
+		int eatValid = 1;
+		PosNode *posList = move.dest;
+		
+		while (eatValid == 1 && posList->next != NULL)
+		{
+			eatValid = checkOnePosEat(board, currPos, nextPos);
+
+			currPos = nextPos;
+			posList = posList->next;
+			nextPos = posList->pos;
+		}
+		//check last move in the list
+		if (eatValid == 1)
+			eatValid = checkOnePosEat(board, currPos, nextPos);
+
+		valid = eatValid;
+
+		return valid;
+	}
+	
+}
+
+int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next)
+{
+	//check if one eat move is valid
+	int valid = 0;
+
 
 }
+

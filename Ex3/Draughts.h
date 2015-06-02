@@ -59,6 +59,7 @@ char opponentM, char opponentK, char* direction, int king);
 int computerTurn(char board[BOARD_SIZE][BOARD_SIZE]);
 int userTurn(int computerTurn(char board[BOARD_SIZE][BOARD_SIZE]));
 int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move);
-int checkMoveIsValid(char board[BOARD_SIZE][BOARD_SIZE], Move move);
+int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction, char playerM, char playerK, char oponentM, char opponentK);
+int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next);
 
 #endif  
