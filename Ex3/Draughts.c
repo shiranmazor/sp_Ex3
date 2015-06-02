@@ -85,6 +85,21 @@ struct Move{
 	PosNode *dest;
 };
 
+void freeMove(Move *move)
+{
+	free(move->currPos);
+	PosNode *node = move->dest;
+	while (node != NULL)
+	{
+		PosNode *toFree = node;
+		node = node->next;
+		free(toFree->pos);
+		free(toFree);
+		
+	}
+	free(move);
+}
+
 int getIntValue(char c)
 {
 	return c - 'a';
@@ -451,8 +466,11 @@ Pos * formatPos(char* pos_input)
 	char **arr = NULL;
 	Pos* pos = malloc(sizeof(Pos));
 	pos_input = replace(pos_input, '<', "");
+	char * toFree = pos_input;
 	pos_input = replace(pos_input, '>', "");
 	int arr_len = split(pos_input, ',', &arr);
+	free(pos_input);
+	free(toFree);
 	pos->x = getIntValue(arr[0][0]);
 	pos->y = atoi(arr[1])-1;
 	freeArray(arr, arr_len);
@@ -533,7 +551,8 @@ Move * parseMoveCommand(char *command)
 			lastPos = lastPos->next;
 		}
 	}
-
+	freeArray(arr, arrLen);
+	freeArray(destArr, destArrLen);
 	return move;
 }
 
@@ -574,12 +593,12 @@ void unitTests()
 	Move *res = parseMoveCommand(cmd);
 	assert(res->currPos->x == 1 && res->currPos->y == 1);
 	assert(res->dest->pos->x == 1 && res->dest->pos->y == 3);
-	free(res);
+	freeMove(res);
 
 	char cmd2[] = "move <j,10> to <b,4>";
 	res = parseMoveCommand(cmd2);
 	assert(res->currPos->x == 9 && res->currPos->y == 9);
-	free(res);
+	freeMove(res);
 	
 	char cmd3[] = "move <j,10> to <b,4><b,10><d,8>";
 	res = parseMoveCommand(cmd3);
@@ -587,7 +606,7 @@ void unitTests()
 	assert(res->dest->pos->x == 1 && res->dest->pos->y == 3);
 	assert(res->dest->next->pos->x == 1 && res->dest->next->pos->y == 9);
 	assert(res->dest->next->next->pos->x == 3 && res->dest->next->next->pos->y == 7);
-	free(res);
+	freeMove(res);
 
 }
 
