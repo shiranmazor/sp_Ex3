@@ -726,7 +726,7 @@ void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 	printf("%s", ENTER_SETTINGS);
 	char *command = getString(stdin, 10);
 	while (strcmp(command, "quit") != 0 && strcmp(command, "start") != 0)
-	{
+	{ 
 		reduceSpaces(command);
 		executeSettingCmd(board, command);
 
@@ -741,7 +741,10 @@ void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 	{
 		//TODO:clean all memory
 		if (objectsInMemory > 0)
+		{
 			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
+			scanf("%s");
+		}
 
 		exit(0);
 	}
