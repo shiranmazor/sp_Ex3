@@ -6,7 +6,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+//globals new:
+struct Players
+{
+	char user_k;
+	char user_m;
+	char computer_k;
+	char computer_m;
+	char computer_direction;
+	char user_direction;
+
+};
+
+int minimax_depth = 1;
+int computer_color = BLACK;//by default the use played is white = 1
 int objectsInMemory = 0;
+Players game_players;
 void *myMalloc(size_t size) {
 	//printf("allocated memory!\n");
 	objectsInMemory++;
@@ -40,9 +55,7 @@ void *myRealloc(void  *memory, size_t newSize) {
 #define calloc(x,y) myCalloc(x,y)
 #define realloc(x,y) myRealloc(x,y)
 
-//globals:
-int minimax_depth = 1;
-int computer_color = BLACK;//by default the use played is white = 1
+
 char board[BOARD_SIZE][BOARD_SIZE];
 
 
@@ -589,67 +602,91 @@ void unitTests()
 int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
 {
 	int score = 0;
-	char player_man;
-	char player_king;
-	char opponent_man;
-	char opponent_king;
-	char* direction;
-	char* opponent_direction;
+	if (player_color == computer_color)
+	{
 
-	if (player_color == WHITE)
-	{
-		player_man = WHITE_M;
-		player_king = WHITE_K;
-		opponent_man = BLACK_M;
-		opponent_king = BLACK_K;
-		direction = "up";
-		opponent_direction = "down";
+		if (isPlayerStuck(board, game_players.computer_m, game_players.computer_k,
+			game_players.user_m, game_players.user_k, game_players.computer_direction) == 0)//we are stuck loose
+			score = -100;
 
-	}
-	else
-	{
-		player_man = BLACK_M;
-		player_king = BLACK_K;
-		opponent_man = WHITE_M;
-		opponent_king = WHITE_K;
-		direction = "down";
-		opponent_direction = "up";
-	}
-	//check if the player or the oponent stuck
-	if (isPlayerStuck(board, player_man, player_king, opponent_man, opponent_king, direction) == 0)//we are stuck loose
-		score = -100;
-	else if (isPlayerStuck(board, opponent_man, opponent_king, player_man, player_king, opponent_direction) == 0)//opponent stuck we win
-		score == 100;
-	else
-	{
-		int player_counter = 0;
-		int opponent_counter = 0;
-		int i, j;
-		for (i = 0; i < BOARD_SIZE; i++)
+		else if (isPlayerStuck(board, game_players.user_m, game_players.user_k, game_players.computer_m,
+			game_players.computer_k, game_players.user_direction) == 0)//opponent stuck we win
+			score == 100;
+		else
 		{
-			for (j = 0; j < BOARD_SIZE; j++)
+			int player_counter = 0;
+			int opponent_counter = 0;
+			int i, j;
+			for (i = 0; i < BOARD_SIZE; i++)
 			{
-				if ((i + j) % 2 == 0)
+
+				for (j = 0; j < BOARD_SIZE; j++)
 				{
-					if (board[i][j] == player_man)
-						player_counter++;
-					if (board[i][j] == player_king)
-						player_counter = player_counter + 3;
-					if (board[i][j] == opponent_man)
-						opponent_counter++;
-					if (board[i][j] == opponent_king)
-						opponent_counter = player_counter + 3;
+					if ((i + j) % 2 == 0)
+					{
+						if (board[i][j] == game_players.computer_m)
+							player_counter++;
+						if (board[i][j] == game_players.computer_k)
+							player_counter = player_counter + 3;
+						if (board[i][j] == game_players.user_m)
+							opponent_counter++;
+						if (board[i][j] == game_players.user_k)
+							opponent_counter = player_counter + 3;
+					}
 				}
 			}
+			//end loops
+			if (player_counter == 0)
+				score = -100;
+			else if (opponent_counter == 0)
+				score = 100;
+			else
+				score = player_counter - opponent_counter;
 		}
-		//end loops
-		if (player_counter == 0)
-			score = -100;
-		else if (opponent_counter == 0)
+
+
+	}
+	else 
+	{
+		if (isPlayerStuck(board, game_players.user_m, game_players.user_k, game_players.computer_m,
+			game_players.computer_k, game_players.user_direction) == 0)// we are stuck loose
+			score == -100;
+		else if (isPlayerStuck(board, game_players.computer_m, game_players.computer_k,
+			game_players.user_m, game_players.user_k, game_players.computer_direction) == 0) // opponent stuck we win 
 			score = 100;
 		else
-			score = player_counter - opponent_counter;
+		{
+			int player_counter = 0;
+			int opponent_counter = 0;
+			int i, j;
+			for (i = 0; i < BOARD_SIZE; i++)
+			{
+				for (j = 0; j < BOARD_SIZE; j++)
+				{
+					if ((i + j) % 2 == 0)
+					{
+						if (board[i][j] == game_players.computer_m)
+							player_counter++;
+						if (board[i][j] == game_players.computer_k)
+							player_counter = player_counter + 3;
+						if (board[i][j] == game_players.user_m)
+							opponent_counter++;
+						if (board[i][j] == game_players.user_k)
+							opponent_counter = player_counter + 3;
+					}
+				}
+			}
+			//end loops
+			if (player_counter == 0)
+				score = -100;
+			else if (opponent_counter == 0)
+				score = 100;
+			else
+				score = player_counter - opponent_counter;
+		}
 	}
+		
+		
 	return score;	
 
 }
@@ -840,6 +877,24 @@ void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input)
 				computer_color = WHITE;
 			else if (strcmp(arr[1], "white") == 0)
 				computer_color = BLACK;
+			if (computer_color == BLACK)
+			{
+				game_players.user_m = WHITE_M;
+				game_players.user_k = WHITE_K;
+				game_players.computer_m = BLACK_M;
+				game_players.computer_k = BLACK_K;
+				game_players.computer_direction = 'D';
+				game_players.user_direction = 'U';
+			}
+			else
+			{
+				game_players.user_m = BLACK_M;
+				game_players.user_k = BLACK_K;
+				game_players.computer_k = WHITE_K;
+				game_players.computer_m = WHITE_M;
+				game_players.computer_direction = 'U';
+				game_players.user_direction = 'D';
+			}
 		}
 		else if (strcmp(arr[0], "rm") == 0)
 		{
@@ -930,29 +985,19 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 	char computer_m;
 	char computer_k;
 	char* user_direction;
-	if (computer_color == BLACK)
-	{
-		user_m = WHITE_M;
-		user_k = WHITE_K;
+	
+	if (game_players.user_m == WHITE_M)
 		user_direction = "up";
-		computer_m = BLACK_M;
-		computer_k = BLACK_K;
-	}
 	else
-	{
-		user_m = BLACK_M;
-		user_k = BLACK_K;
 		user_direction = "down";
-		computer_k = WHITE_K;
-		computer_m = WHITE_M;
-	}
+	
 	int x_int = getIntValue(move.currPos->x);
-	if (board[x_int][move.currPos->y - 1] != user_m || board[x_int][move.currPos->y - 1] != user_k)
+	if (board[x_int][move.currPos->y - 1] != game_players.user_m || board[x_int][move.currPos->y - 1] != game_players.user_k)
 	{
 		printf("%s", NO_DICS);
 		return 0;
 	}
-	else if (checkMoveIsValidM(board, move, user_direction, user_m, user_k, computer_m, computer_k) == 0)
+	else if (checkMoveIsValidM(board, move, user_direction) == 0)
 	{
 		//move is not valid
 		printf("%s", ILLEGAL_MOVE);
@@ -965,7 +1010,7 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 
 
 
-int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction, char playerM ,char playerK, char oponentM, char opponentK)
+int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction)
 {
 	//no need to check pos border because we already check it in parse move
 	int valid = 0;
@@ -1024,9 +1069,21 @@ int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direc
 
 int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next)
 {
-	//check if one eat move is valid
+	//check if one eat move is valid'
+	int next_int_x = getIntValue(next->x);
+	int curr_x_int = getIntValue(curr->x);
 	int valid = 0;
+	//eat forward:
+	/*
+	if (next_int_x == curr_x_int + 2 && next->y == curr->y + 2 && board[next_int_x][next->y - 1] == EMPTY)
+	{
+	if (next_int_x == curr_x_int + 2 && next->y == curr->y + 2 && board[next_int_x][next->y - 1] == opp)
+	}
+
+	if (next_int_x == curr_x_int + 1 && nextPos->y == currPos->y - 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
+	valid == 1;
+	*/
+	
 
 
 }
-

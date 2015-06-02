@@ -33,6 +33,8 @@ typedef struct Pos Pos;
 typedef struct PosNode PosNode;
 typedef struct MoveNode MoveNode;
 typedef struct Move Move;
+typedef struct Players Players;
+
 int getIntValue(char c);
 int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int color);
 void settingState(char board[BOARD_SIZE][BOARD_SIZE]);
@@ -53,14 +55,12 @@ void set_minimax_depth(int depth);
 void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input);
 void set_disc(char board[BOARD_SIZE][BOARD_SIZE], char* pos_input, char* color, char* type);
 int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color);
-int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], char player_man, char player_king, char opponent_man
-, char opponent_king, char* direction);
-int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, 
-char opponentM, char opponentK, char* direction, int king);
+int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], char player_man, char player_king, char opponent_man, char opponent_king, char* direction);
+int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player,char opponentM, char opponentK, char* direction, int king);
 int computerTurn(char board[BOARD_SIZE][BOARD_SIZE]);
 int userTurn(char board[BOARD_SIZE][BOARD_SIZE]);
 int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move);
-int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction, char playerM, char playerK, char oponentM, char opponentK);
+int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction);
 int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next);
 
 MoveNode *getKingMoves(int x, int y);
