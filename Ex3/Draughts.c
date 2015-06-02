@@ -415,7 +415,7 @@ void print_board(char board[BOARD_SIZE][BOARD_SIZE])
 	printf("\n");
 }
 
-void clear_board(char board[BOARD_SIZE][BOARD_SIZE])
+void clear_board()
 {
 	int i, j;
 	for (i = 0; i < BOARD_SIZE; i++)
@@ -485,7 +485,7 @@ Pos * formatPos(char* pos_input)
 	return pos;
 }
 
-void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input)
+void remove_disc(char* input)
 {
 	//input is <x,y>
 	Pos *pos = formatPos(input);
@@ -556,7 +556,7 @@ Move * parseMoveCommand(char *command)
 	return move;
 }
 
-void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color, char* type)
+void set_disc(char* pos_input, char* color, char* type)
 {
 	//char **arr = NULL;
 	Pos *pos = formatPos(pos_input);
@@ -611,17 +611,17 @@ void unitTests()
 }
 
 
-int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
+int score(int player_color)
 {
 	int score = 0;
 	if (player_color == computer_color)
 	{
 
-		if (isPlayerStuck(board, game_players.computer_m, game_players.computer_k,
+		if (isPlayerStuck(game_players.computer_m, game_players.computer_k,
 			game_players.user_m, game_players.user_k, game_players.computer_direction) == 0)//we are stuck loose
 			score = -100;
 
-		else if (isPlayerStuck(board, game_players.user_m, game_players.user_k, game_players.computer_m,
+		else if (isPlayerStuck(game_players.user_m, game_players.user_k, game_players.computer_m,
 			game_players.computer_k, game_players.user_direction) == 0)//opponent stuck we win
 			score == 100;
 		else
@@ -655,7 +655,6 @@ int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
 			else
 				score = player_counter - opponent_counter;
 		}
-
 
 	}
 	else 
@@ -703,7 +702,7 @@ int score(char board[BOARD_SIZE][BOARD_SIZE], int player_color)
 
 }
 
-int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], char player_man, char player_king, char opponent_man
+int isPlayerStuck(char player_man, char player_king, char opponent_man
 , char opponent_king, char* direction)
 {
 
@@ -735,7 +734,7 @@ int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], char player_man, char play
 
 }
 
-int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, 
+int checkClosedMovesMan(int i, int j, char player, 
 	char opponentM, char opponentK, char* direction, int king)
 {
 	int hasMove = 0;
@@ -827,7 +826,7 @@ int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char p
 
 }
 
-void settingState(char board[BOARD_SIZE][BOARD_SIZE])
+void settingState()
 {
 	init_board(board);
 	printf("%s", ENTER_SETTINGS);
@@ -835,7 +834,7 @@ void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 	while (strcmp(command, "quit") != 0 && strcmp(command, "start") != 0)
 	{ 
 		reduceSpaces(command);
-		executeSettingCmd(board, command);
+		executeSettingCmd(command);
 
 		command = getString(stdin, 10);
 	}
@@ -859,7 +858,7 @@ void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 	free(command);
 }
 
-void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input)
+void executeSettingCmd( char* input)
 {
 	//trim all spaces from start and end:
 	input = trimwhitespace(input);
@@ -870,7 +869,7 @@ void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input)
 		if (strcmp(arr[0], "clear") == 0)
 		{
 			//call clear
-			clear_board(board);
+			clear_board();
 		}
 		else if (strcmp(arr[0], "print") == 0)
 		{
@@ -910,13 +909,13 @@ void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input)
 		}
 		else if (strcmp(arr[0], "rm") == 0)
 		{
-			remove_disc(board, arr[1]);
+			remove_disc(arr[1]);
 		}
 
 	}
 	else if (arr_len == 4 && strcmp(arr[0], "set") == 0)//set <x,y> a b
 	{
-		set_disc(board, arr[1], arr[2], arr[3]);
+		set_disc(arr[1], arr[2], arr[3]);
 	}
 	else
 	{
@@ -927,7 +926,7 @@ void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input)
 	freeArray(arr, arr_len);
 }
 
-void GameState(char board[BOARD_SIZE][BOARD_SIZE])
+void GameState()
 {
 	int resComputer = 0;
 	int resUser = 0;
@@ -935,24 +934,24 @@ void GameState(char board[BOARD_SIZE][BOARD_SIZE])
 	//first turn
 	if (computer_color == WHITE)
 	{
-		resComputer = computerTurn(board);
+		resComputer = computerTurn();
 		if (resComputer == 1)
 			return;//computer won
 		else
 		{
-			resUser = userTurn(board);
+			resUser = userTurn();
 			isComputerTurn = 1;
 		}
 			
 	}
 	else //user starts
 	{
-		resUser = userTurn(board);
+		resUser = userTurn();
 		if (resUser == 1)
 			return;//user won
 		else
 		{
-			resComputer = computerTurn(board);
+			resComputer = computerTurn();
 			isComputerTurn = 0;
 		}
 			
@@ -960,23 +959,23 @@ void GameState(char board[BOARD_SIZE][BOARD_SIZE])
 	while (resComputer != 1 && resUser != 1)//main loop of the game
 	{
 		if (isComputerTurn == 1)
-			resComputer = computerTurn(board);
+			resComputer = computerTurn();
 		else
-			resUser = userTurn(board);
+			resUser = userTurn();
 	}
 		
 
 }
 
 /*if computerTurn or playerTurn return 1 - they won otherwise return 0*/
-int computerTurn(char board[BOARD_SIZE][BOARD_SIZE])
+int computerTurn()
 {
 	//Todo:call minimax algorithm
 	//perforam chosen  move
 	//if score is winning return 1 and print computer win!
 	return 0;
 }
-int userTurn(char board[BOARD_SIZE][BOARD_SIZE])
+int userTurn()
 {
 
 	printf("%s", ENTER_YOUR_MOVE);
@@ -985,12 +984,12 @@ int userTurn(char board[BOARD_SIZE][BOARD_SIZE])
 	{
 		Move *move = parseMoveCommand(command);
 		if (move != NULL)
-			performUserMove(board, *move);
+			performUserMove(*move);
 		free(move);
 	}
 }
 
-int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
+int performUserMove(Move move)
 {
 	char user_m;
 	char user_k;
@@ -1009,7 +1008,7 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 		printf("%s", NO_DICS);
 		return 0;
 	}
-	else if (checkMoveIsValidM(board, move, user_direction) == 0)
+	else if (checkMoveIsValidMan(move, user_direction) == 0)
 	{
 		//move is not valid
 		printf("%s", ILLEGAL_MOVE);
@@ -1022,7 +1021,7 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 
 
 
-int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction)
+int checkMoveIsValidMan( Move move, char* direction)
 {
 	//no need to check pos border because we already check it in parse move
 	int player_color;
@@ -1068,7 +1067,7 @@ int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direc
 		
 		while (eatValid == 1 && posList->next != NULL)
 		{
-			eatValid = checkOnePosEat(board, currPos, nextPos, player_color);
+			eatValid = checkOnePosEat(currPos, nextPos, player_color);
 
 			currPos = nextPos;
 			posList = posList->next;
@@ -1085,7 +1084,7 @@ int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direc
 	
 }
 
-int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next,int player_color)
+int checkOnePosEat(Pos* curr, Pos* next,int player_color)
 {
 	//check if one eat move is valid'
 	int next_int_x = next->x;
