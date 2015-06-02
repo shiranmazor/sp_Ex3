@@ -43,6 +43,8 @@ void *myRealloc(void  *memory, size_t newSize) {
 //globals:
 int minimax_depth = 1;
 int computer_color = BLACK;//by default the use played is white = 1
+char board[BOARD_SIZE][BOARD_SIZE];
+
 
 struct PosNode
 {
@@ -54,6 +56,13 @@ struct Pos
 {
 	char x;
 	int y;
+};
+
+struct MoveNode
+{
+	Move *move;
+	MoveNode *next;
+
 };
 
 struct Move{
@@ -135,8 +144,6 @@ char* getString(FILE* fp, size_t size)
 
 int main()
 {
-	char board[BOARD_SIZE][BOARD_SIZE];
-
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
 
@@ -314,6 +321,57 @@ void print_line(){
 		printf("-");
 	}
 	printf("|\n");
+}
+
+
+MoveNode * getMoves(char userM, char userK)
+{
+	MoveNode *firstMoveNode = NULL;
+	MoveNode *lastNode = NULL;
+
+	int i, j;
+	for (i = 0; i < BOARD_SIZE; i++)
+	{
+		for (j = 0; j < BOARD_SIZE; j++)
+		{
+			if ((i + j) % 2 == 0)
+			{
+				MoveNode *move = NULL;
+				if (board[i, j] == userM)
+				{
+					move = getManMoves(i,j);
+				}
+				else if (board[i,j] == userK)
+				{
+					move = getKingMoves(i, j);
+				}
+
+				if (firstMoveNode == NULL)
+				{
+					firstMoveNode = move;
+					lastNode = move;
+				}
+				else
+				{
+					lastNode->next = move;
+					lastNode = lastNode->next;
+				}
+			}
+
+		}
+	}
+	return firstMoveNode;
+}
+
+
+MoveNode *getKingMoves(int x, int y)
+{
+	return NULL;
+}
+
+MoveNode *getManMoves(int x, int y)
+{
+	return NULL;
 }
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE])
@@ -904,6 +962,8 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 	//only one pos
 
 }
+
+
 
 int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction, char playerM ,char playerK, char oponentM, char opponentK)
 {

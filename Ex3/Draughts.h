@@ -31,6 +31,7 @@ typedef char** board_t;
 
 typedef struct Pos Pos;
 typedef struct PosNode PosNode;
+typedef struct MoveNode MoveNode;
 typedef struct Move Move;
 int getIntValue(char c);
 int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int color);
@@ -57,9 +58,11 @@ int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], char player_man, char play
 int checkClosedMovesMan(char board[BOARD_SIZE][BOARD_SIZE], int i, int j, char player, 
 char opponentM, char opponentK, char* direction, int king);
 int computerTurn(char board[BOARD_SIZE][BOARD_SIZE]);
-int userTurn(int computerTurn(char board[BOARD_SIZE][BOARD_SIZE]));
+int userTurn(char board[BOARD_SIZE][BOARD_SIZE]);
 int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move);
 int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction, char playerM, char playerK, char oponentM, char opponentK);
 int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next);
 
+MoveNode *getKingMoves(int x, int y);
+MoveNode *getManMoves(int x, int y);
 #endif  
