@@ -346,7 +346,7 @@ void print_line(){
 
 
 
-MoveNode * getMoves(char userM, char userK)
+MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char * direction)
 {
 	MoveNode *firstMoveNode = NULL;
 	MoveNode *lastNode = NULL;
@@ -358,14 +358,18 @@ MoveNode * getMoves(char userM, char userK)
 		{
 			if ((i + j) % 2 == 0)
 			{
+				Pos pos;
+				pos.x = i;
+				pos.y = j;
+
 				MoveNode *move = NULL;
 				if (board[i, j] == userM)
 				{
-					move = getManMoves(i,j);
+					move = getManMoves(pos, userM, userK, board, direction);
 				}
 				else if (board[i,j] == userK)
 				{
-					move = getKingMoves(i, j);
+					move = getKingMoves(pos);
 				}
 
 				if (firstMoveNode == NULL)
@@ -379,26 +383,114 @@ MoveNode * getMoves(char userM, char userK)
 					lastNode = lastNode->next;
 				}
 			}
-
 		}
 	}
 	return firstMoveNode;
 }
 
-MoveNode *getAdjPositions(Pos pos)
+//returns false if pos is outside the board
+int isValidPos(Pos *pos)
 {
-
+	if (pos->x >= BOARD_SIZE || pos->x < 0 || pos->y >= BOARD_SIZE || pos->y < 0)
+		return 0;
+	return 1;
 }
 
-MoveNode *getKingMoves(int x, int y)
+Pos * getAdjPositions(Pos pos, Pos* adj[4])
+{
+	//down:
+	adj[0]->x = pos.x - 1;
+	adj[0]->y = pos.y - 1;
+
+	adj[1]->x = pos.x + 1;
+	adj[1]->y = pos.y - 1;
+
+	//up:
+	adj[2]->x = pos.x - 1;
+	adj[2]->y = pos.y + 1;
+
+	adj[3]->x = pos.x + 1;
+	adj[3]->y = pos.y + 1;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (!isValidPos(adj[i]))
+		{
+			free(adj[i]);
+			adj[i] = NULL;;
+		}
+	}
+	return adj;
+}
+
+
+MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char* direction)
+{
+	Pos* adj[4] = { malloc(sizeof(Pos)) };
+	getAdjPositions(pos, adj);
+	MoveNode *movesList = NULL;
+	MoveNode *last = NULL;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if ((strcmp("up", direction) == 0) && i < 2) //moving in the wrong direction
+			continue;
+		if ((strcmp("down", direction) == 0) && i > 1) //moving in the wrong direction
+			continue;
+
+		if (adj[i] != NULL)
+		{
+			char adjVal = board[adj[i]->x, adj[i]->y];
+			if (adjVal == EMPTY)
+			{
+				MoveNode *moveNode = malloc(sizeof(MoveNode));
+				Move *move = malloc(sizeof(Move));
+				move->currPos = malloc(sizeof(Pos));
+				move->currPos->x = pos.x;
+				move->currPos->y = pos.y;
+				move->dest = malloc(sizeof(PosNode));
+
+				moveNode->move = move;
+				moveNode->next = NULL;
+
+
+				if (!movesList) //empty list
+				{
+					movesList = moveNode;
+					last = movesList;
+				}
+				else
+				{
+					last->next = move;
+					last = last->next;
+				}
+			}
+			else if (adjVal != userM && adjVal != userK) //eating?
+			{
+				int xDiff = pos.x - adj[i]->x;
+				int yDiff = pos.y - adj[i]->y;
+				char nextToolOnTheSamePath = board[adj[i]->x + xDiff, adj[i]->y + yDiff];
+				if (nextToolOnTheSamePath != EMPTY) //can't eat - invalid move
+					continue;
+
+				//yay! we can eat at least one! maybe more?
+
+
+			}
+		}
+
+	}
+
+	free(adj);
+	return NULL;
+}
+
+MoveNode *getKingMoves(Pos pos)
 {
 	return NULL;
 }
 
-MoveNode *getManMoves(int x, int y)
-{
-	return NULL;
-}
+
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE])
 {

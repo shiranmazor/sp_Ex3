@@ -63,6 +63,6 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move);
 int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction);
 int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next);
 
-MoveNode *getKingMoves(int x, int y);
-MoveNode *getManMoves(int x, int y);
+MoveNode *getKingMoves(Pos pos);
+MoveNode *getManMoves(Pos pos);
 #endif  
