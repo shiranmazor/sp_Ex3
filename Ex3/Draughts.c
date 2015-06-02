@@ -424,7 +424,7 @@ Pos * getAdjPositions(Pos pos, Pos* adj[4])
 }
 
 
-MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char* direction)
+MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char* direction, int onlyEatMove)
 {
 	Pos* adj[4] = { malloc(sizeof(Pos)) };
 	getAdjPositions(pos, adj);
@@ -441,7 +441,11 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 		if (adj[i] != NULL)
 		{
 			char adjVal = board[adj[i]->x, adj[i]->y];
-			if (adjVal == EMPTY)
+			if (adjVal == userM || adjVal == userK) //can't eat, same team buddy!
+				continue;
+			
+
+			if (adjVal == EMPTY && onlyEatMove==0)
 			{
 				MoveNode *moveNode = malloc(sizeof(MoveNode));
 				Move *move = malloc(sizeof(Move));
@@ -450,8 +454,13 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				move->currPos->y = pos.y;
 				move->dest = malloc(sizeof(PosNode));
 
+				move->eat = 0;
+
 				moveNode->move = move;
 				moveNode->next = NULL;
+
+				move->dest->pos = adj[i];
+				move->dest->next = NULL;
 
 
 				if (!movesList) //empty list
@@ -464,6 +473,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					last->next = move;
 					last = last->next;
 				}
+				//todo free all?
 			}
 			else if (adjVal != userM && adjVal != userK) //eating?
 			{
@@ -475,14 +485,65 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 
 				//yay! we can eat at least one! maybe more?
 
+				Pos pos;
+				pos.x = adj[i]->x + xDiff;
+				pos.y = adj[i]->y + yDiff;
 
+				MoveNode *movesList = getManMoves(pos, userM, userK, board, direction, 1);
+
+				int eats = 1; //the one we just did
+
+				//todo create move before continue 
+				if (!movesList)
+				{
+					continue;
+					//todo free something?
+				}
+
+				MoveNode *moveNodeNew = movesList->move;
+				while (moveNodeNew)
+				{
+					MoveNode *moveNode = malloc(sizeof(MoveNode));
+					Move *move = malloc(sizeof(Move));
+					move->currPos = malloc(sizeof(Pos));
+					move->currPos->x = pos.x;
+					move->currPos->y = pos.y;
+					move->dest = malloc(sizeof(PosNode));
+					move->dest->pos = adj[i];
+					//move->dest->next = NULL;
+
+					move->eat = 1 + moveNodeNew->move->eat;
+
+					moveNode->move = move;
+					moveNode->next = NULL;
+
+					move->dest->next = moveNodeNew->move->dest;
+					moveNodeNew = moveNodeNew->next;
+					free(moveNodeNew->move);
+
+					if (!movesList) //empty list
+					{
+						movesList = moveNode;
+						last = movesList;
+					}
+					else
+					{
+						last->next = move;
+						last = last->next;
+					}
+
+				}
+				free(movesList);
+				
 			}
+
+
 		}
 
 	}
 
 	free(adj);
-	return NULL;
+	return movesList;
 }
 
 MoveNode *getKingMoves(Pos pos)
