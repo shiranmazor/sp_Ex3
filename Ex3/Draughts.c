@@ -553,16 +553,16 @@ void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color,
 		if (strcmp(color, "black") == 0)
 		{
 			if (strcmp(type, "k") == 0)
-				board[x_int][pos->y - 1] = BLACK_K;
+				board[x_int][pos->y] = BLACK_K;
 			else if (strcmp(type, "m") == 0)
-				board[x_int][pos->y - 1] = BLACK_M;
+				board[x_int][pos->y] = BLACK_M;
 		}
 		else if (strcmp(color, "white") == 0)
 		{
 			if (strcmp(type, "k") == 0)
-				board[x_int][pos->y - 1] = WHITE_K;
+				board[x_int][pos->y] = WHITE_K;
 			else if (strcmp(type, "m") == 0)
-				board[x_int][pos->y - 1] = WHITE_M;
+				board[x_int][pos->y] = WHITE_M;
 		}
 	}
 }
@@ -985,7 +985,7 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 		user_direction = "down";
 	
 	int x_int = move.currPos->x;
-	if (board[x_int][move.currPos->y - 1] != game_players.user_m || board[x_int][move.currPos->y - 1] != game_players.user_k)
+	if (board[x_int][move.currPos->y] != game_players.user_m && board[x_int][move.currPos->y] != game_players.user_k)
 	{
 		printf("%s", NO_DICS);
 		return 0;
@@ -1006,6 +1006,12 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direction)
 {
 	//no need to check pos border because we already check it in parse move
+	int player_color;
+	if (strcmp(direction, "up"))
+		player_color = WHITE;
+	else
+		player_color = BLACK;
+
 	int valid = 0;
 	int eat = 0;
 	Pos *currPos = move.currPos;
@@ -1021,17 +1027,17 @@ int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direc
 	{
 		if (strcmp(direction, "up") == 0)
 		{
-			if (next_int_x == curr_x_int + 1 && nextPos->y == currPos->y + 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
-				valid == 1;
-			if (next_int_x == curr_x_int - 1 && nextPos->y == currPos->y + 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
-				valid == 1;
+			if (next_int_x == curr_x_int + 1 && nextPos->y == currPos->y + 1 && board[next_int_x][nextPos->y] == EMPTY)
+				valid = 1;
+			if (next_int_x == curr_x_int - 1 && nextPos->y == currPos->y + 1 && board[next_int_x][nextPos->y] == EMPTY)
+				valid = 1;
 		}
 		else//user us going down
 		{
-			if (next_int_x == curr_x_int - 1 && nextPos->y == currPos->y - 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
-				valid == 1;
-			if (next_int_x == curr_x_int + 1 && nextPos->y == currPos->y - 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
-				valid == 1;
+			if (next_int_x == curr_x_int - 1 && nextPos->y == currPos->y - 1 && board[next_int_x][nextPos->y] == EMPTY)
+				valid = 1;
+			if (next_int_x == curr_x_int + 1 && nextPos->y == currPos->y - 1 && board[next_int_x][nextPos->y] == EMPTY)
+				valid = 1;
 		}
 		return valid;
 	}
@@ -1043,7 +1049,7 @@ int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direc
 		
 		while (eatValid == 1 && posList->next != NULL)
 		{
-			eatValid = checkOnePosEat(board, currPos, nextPos);
+			eatValid = checkOnePosEat(board, currPos, nextPos, player_color);
 
 			currPos = nextPos;
 			posList = posList->next;
