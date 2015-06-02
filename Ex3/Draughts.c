@@ -67,8 +67,8 @@ struct PosNode
 
 struct Pos
 {
-	char x;
-	//int x;
+	//char x;
+	int x;
 	int y;
 };
 
@@ -453,12 +453,12 @@ Pos * formatPos(char* pos_input)
 	pos_input = replace(pos_input, '<', "");
 	pos_input = replace(pos_input, '>', "");
 	int arr_len = split(pos_input, ',', &arr);
-	pos->x = arr[0][0];
-	pos->y = atoi(arr[1]);
+	pos->x = getIntValue(arr[0][0]);
+	pos->y = atoi(arr[1])-1;
 	freeArray(arr, arr_len);
 
 	
-	if (pos->x < 97 || pos->x > 106 || pos->y<1 || pos->y>10 || ((pos->x+pos->y) %2 !=0))
+	if (pos->x < 0 || pos->x > 9 || pos->y<0 || pos->y>9 || ((pos->x+pos->y) %2 !=0))
 	{
 		printf("%s", WRONG_POSITION);
 		return NULL; //todo - is this OK? should be handled by caller?
@@ -474,7 +474,7 @@ void remove_disc(char board[BOARD_SIZE][BOARD_SIZE], char* input)
 
 	if (pos)
 	{
-		int x_int = getIntValue(pos->x);
+		int x_int = pos->x;
 		board[x_int][pos->y-1] = EMPTY;
 	}
 	//freeArray(arr, arr_len);
@@ -549,7 +549,7 @@ void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color,
 	}
 	else
 	{
-		int x_int = getIntValue(pos->x);
+		int x_int = pos->x;
 		if (strcmp(color, "black") == 0)
 		{
 			if (strcmp(type, "k") == 0)
@@ -572,21 +572,21 @@ void unitTests()
 	char cmd[] = "move <b,2> to <b,4>";
 	trimwhitespace(cmd);
 	Move *res = parseMoveCommand(cmd);
-	assert(res->currPos->x == 'b' && res->currPos->y == 2);
-	assert(res->dest->pos->x == 'b' && res->dest->pos->y == 4);
+	assert(res->currPos->x == 1 && res->currPos->y == 1);
+	assert(res->dest->pos->x == 1 && res->dest->pos->y == 3);
 	free(res);
 
 	char cmd2[] = "move <j,10> to <b,4>";
 	res = parseMoveCommand(cmd2);
-	assert(res->currPos->x == 'j' && res->currPos->y == 10);
+	assert(res->currPos->x == 9 && res->currPos->y == 9);
 	free(res);
 	
 	char cmd3[] = "move <j,10> to <b,4><b,10><d,8>";
 	res = parseMoveCommand(cmd3);
-	assert(res->currPos->x == 'j' && res->currPos->y == 10);
-	assert(res->dest->pos->x == 'b' && res->dest->pos->y == 4);
-	assert(res->dest->next->pos->x == 'b' && res->dest->next->pos->y == 10);
-	assert(res->dest->next->next->pos->x == 'd' && res->dest->next->next->pos->y == 8);
+	assert(res->currPos->x == 9 && res->currPos->y == 9);
+	assert(res->dest->pos->x == 1 && res->dest->pos->y == 3);
+	assert(res->dest->next->pos->x == 1 && res->dest->next->pos->y == 9);
+	assert(res->dest->next->next->pos->x == 3 && res->dest->next->next->pos->y == 7);
 	free(res);
 
 }
@@ -984,7 +984,7 @@ int performUserMove(char board[BOARD_SIZE][BOARD_SIZE], Move move)
 	else
 		user_direction = "down";
 	
-	int x_int = getIntValue(move.currPos->x);
+	int x_int = move.currPos->x;
 	if (board[x_int][move.currPos->y - 1] != game_players.user_m || board[x_int][move.currPos->y - 1] != game_players.user_k)
 	{
 		printf("%s", NO_DICS);
@@ -1011,8 +1011,8 @@ int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direc
 	Pos *currPos = move.currPos;
 	Pos *nextPos = move.dest->pos;
 
-	int curr_x_int = getIntValue(currPos->x);
-	int next_int_x= getIntValue(nextPos->x);
+	int curr_x_int = currPos->x;
+	int next_int_x= nextPos->x;
 
 	//check if we eat or not - we have more then one eat
 	if (move.dest->next != NULL)
@@ -1063,8 +1063,8 @@ int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direc
 int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next)
 {
 	//check if one eat move is valid'
-	int next_int_x = getIntValue(next->x);
-	int curr_x_int = getIntValue(curr->x);
+	int next_int_x = next->x;
+	int curr_x_int = curr->x;
 	int valid = 0;
 	//eat forward:
 	/*
