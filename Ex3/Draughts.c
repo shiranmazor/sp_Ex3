@@ -68,6 +68,7 @@ struct PosNode
 struct Pos
 {
 	char x;
+	//int x;
 	int y;
 };
 
@@ -155,15 +156,7 @@ char* getString(FILE* fp, size_t size)
 }
 
 
-int main()
-{
-	printf("%s", WELCOME_TO_DRAUGHTS);
-	settingState(board);
 
-	//print_message(WRONG_MINIMAX_DEPTH);
-	//perror_message("TEST");
-	return 0;
-}
 
 
 
@@ -514,7 +507,7 @@ Move * parseMoveCommand(char *command)
 	int arrLen = split(command, ' ', &arr);
 
 	move->currPos  = formatPos(arr[1]);
-	if (move->currPos)//position was invalid
+	if (!move->currPos)//position was invalid
 		return NULL;
 	
 	char **destArr = NULL;
@@ -576,24 +569,24 @@ void set_disc(char board[BOARD_SIZE][BOARD_SIZE],  char* pos_input, char* color,
 
 void unitTests()
 {
-	char cmd[] = "move <b,3> to <a,2>";
+	char cmd[] = "move <b,2> to <b,4>";
 	trimwhitespace(cmd);
 	Move *res = parseMoveCommand(cmd);
-	assert(res->currPos->x == 'b' && res->currPos->y == 3);
-	assert(res->dest->pos->x == 'a' && res->dest->pos->y == 2);
+	assert(res->currPos->x == 'b' && res->currPos->y == 2);
+	assert(res->dest->pos->x == 'b' && res->dest->pos->y == 4);
 	free(res);
 
-	char cmd2[] = "move <j,10> to <a,3>";
+	char cmd2[] = "move <j,10> to <b,4>";
 	res = parseMoveCommand(cmd2);
 	assert(res->currPos->x == 'j' && res->currPos->y == 10);
 	free(res);
 	
-	char cmd3[] = "move <j,10> to <a,3><b,10><c,8>";
+	char cmd3[] = "move <j,10> to <b,4><b,10><d,8>";
 	res = parseMoveCommand(cmd3);
 	assert(res->currPos->x == 'j' && res->currPos->y == 10);
-	assert(res->dest->pos->x == 'a' && res->dest->pos->y == 3);
+	assert(res->dest->pos->x == 'b' && res->dest->pos->y == 4);
 	assert(res->dest->next->pos->x == 'b' && res->dest->next->pos->y == 10);
-	assert(res->dest->next->next->pos->x == 'c' && res->dest->next->next->pos->y == 8);
+	assert(res->dest->next->next->pos->x == 'd' && res->dest->next->next->pos->y == 8);
 	free(res);
 
 }
@@ -1086,4 +1079,15 @@ int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next)
 	
 
 
+}
+
+int main()
+{
+	unitTests();
+	printf("%s", WELCOME_TO_DRAUGHTS);
+	settingState(board);
+
+	//print_message(WRONG_MINIMAX_DEPTH);
+	//perror_message("TEST");
+	return 0;
 }
