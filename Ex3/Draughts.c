@@ -740,6 +740,7 @@ void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 	else if (strcmp(command, "quit") == 0)
 	{
 		//TODO:clean all memory
+		free(command);
 		if (objectsInMemory > 0)
 		{
 			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
@@ -748,7 +749,7 @@ void settingState(char board[BOARD_SIZE][BOARD_SIZE])
 
 		exit(0);
 	}
-
+	free(command);
 }
 
 void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input)
