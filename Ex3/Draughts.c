@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//globals new:
+//globals:
 struct Players
 {
 	char user_k;
@@ -1060,23 +1060,62 @@ int checkMoveIsValidM(char board[BOARD_SIZE][BOARD_SIZE], Move move, char* direc
 	
 }
 
-int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next)
+int checkOnePosEat(char board[BOARD_SIZE][BOARD_SIZE], Pos* curr, Pos* next,int player_color)
 {
 	//check if one eat move is valid'
 	int next_int_x = next->x;
 	int curr_x_int = curr->x;
 	int valid = 0;
 	//eat forward:
-	/*
-	if (next_int_x == curr_x_int + 2 && next->y == curr->y + 2 && board[next_int_x][next->y - 1] == EMPTY)
+	if (player_color == computer_color)
 	{
-	if (next_int_x == curr_x_int + 2 && next->y == curr->y + 2 && board[next_int_x][next->y - 1] == opp)
-	}
+		if (next_int_x == curr_x_int + 2 && next->y == curr->y + 2 && board[next_int_x][next->y - 1] == EMPTY)
+		{
+			if (board[curr_x_int + 1][curr->y+1] == game_players.user_m || board[curr_x_int + 1][curr->y+1] == game_players.user_k)
+				valid = 1;
+		}
 
-	if (next_int_x == curr_x_int + 1 && nextPos->y == currPos->y - 1 && board[next_int_x][nextPos->y - 1] == EMPTY)
-	valid == 1;
-	*/
-	
+		if (next_int_x == curr_x_int - 2 && next->y == curr->y + 2 && board[next_int_x][next->y - 1] == EMPTY)
+		{
+			if (board[curr_x_int - 1][curr->y+1] == game_players.user_m || board[curr_x_int - 1][curr->y+1] == game_players.user_k)
+				valid = 1;
+		}
+		if (next_int_x == curr_x_int + 2 && next->y == curr->y - 2 && board[next_int_x][next->y - 1] == EMPTY)
+		{
+			if (board[curr_x_int + 1][curr->y-1] == game_players.user_m || board[curr_x_int + 1][curr->y-1] == game_players.user_k)
+				valid = 1;
+		}
+		if (next_int_x == curr_x_int - 2 && next->y == curr->y - 2 && board[next_int_x][next->y - 1] == EMPTY)
+		{
+			if (board[curr_x_int - 1][curr->y-1] == game_players.user_m || board[curr_x_int - 1][curr->y-1] == game_players.user_k)
+				valid = 1;
+		}
+	}
+	else // player == user
+	{
+		if (next_int_x == curr_x_int + 2 && next->y == curr->y + 2 && board[next_int_x][next->y - 1] == EMPTY)
+		{
+			if (board[curr_x_int + 1][curr->y+1] == game_players.computer_m || board[curr_x_int + 1][curr->y+1] == game_players.computer_k)
+				valid = 1;
+		}
+		if (next_int_x == curr_x_int - 2 && next->y == curr->y + 2 && board[next_int_x][next->y - 1] == EMPTY)
+		{
+			if (board[curr_x_int - 1][curr->y+1] == game_players.computer_m || board[curr_x_int - 1][curr->y+1] == game_players.computer_k)
+				valid = 1;
+		}
+		if (next_int_x == curr_x_int + 2 && next->y == curr->y - 2 && board[next_int_x][next->y - 1] == EMPTY)
+		{
+			if (board[curr_x_int + 1][curr->y - 1] == game_players.computer_m || board[curr_x_int + 1][curr->y - 1] == game_players.computer_k)
+				valid = 1;
+		}
+		if (next_int_x == curr_x_int - 2 && next->y == curr->y - 2 && board[next_int_x][next->y - 1] == EMPTY)
+		{
+			if (board[curr_x_int - 1][curr->y - 1] == game_players.computer_m || board[curr_x_int - 1][curr->y - 1] == game_players.computer_k)
+				valid = 1;
+		}
+	}
+	return valid;
+
 
 
 }
