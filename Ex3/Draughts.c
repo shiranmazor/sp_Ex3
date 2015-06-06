@@ -528,7 +528,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					}
 					else
 					{
-						last->next = move;
+						last->next = moveNode;
 						last = last->next;
 					}
 
@@ -897,7 +897,26 @@ void unitTests()
 	assert(movesList->move->dest->next->pos->y == 0);
 	assert(movesList->move->dest->next->next == NULL);
 
-
+	pos.x = 2;
+	pos.y = 2;
+	clear_board(board);
+	board[2][2] = WHITE_M;
+	board[1][3] = BLACK_M;
+	board[3][3] = BLACK_M;
+	print_board(board);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	assert(movesList->next != NULL); //more than one possible move
+	assert(movesList->next->next == NULL); //two possible moves
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 1);
+	assert(movesList->next->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 0);
+	assert(movesList->move->dest->pos->y == 4);
+	assert(movesList->next->move->dest->pos->x == 4);
+	assert(movesList->next->move->dest->pos->y == 4);
+	
+	assert(movesList->move->dest->next == NULL);
 
 }
 
