@@ -857,7 +857,7 @@ void unitTests()
 	//todo free movesList 
 
 	//eating one:
-	board[1][1] = BLACK_M;
+	board[1][1] = BLACK_K;
 	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
@@ -881,6 +881,22 @@ void unitTests()
 	assert(movesList->move->dest->next->pos->x == 4);
 	assert(movesList->move->dest->next->pos->y == 4);
 	assert(movesList->move->dest->next->next == NULL);
+
+	//eating backward:
+	board[3][3] = EMPTY;
+	board[3][1] = BLACK_M;
+	
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 2);
+	assert(movesList->move->dest->pos->x == 2);
+	assert(movesList->move->dest->pos->y == 2);
+	assert(movesList->move->dest->next->pos->x == 4);
+	assert(movesList->move->dest->next->pos->y == 0);
+	assert(movesList->move->dest->next->next == NULL);
+
 
 
 }
