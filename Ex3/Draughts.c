@@ -903,7 +903,7 @@ void unitTests()
 	board[2][2] = WHITE_M;
 	board[1][3] = BLACK_M;
 	board[3][3] = BLACK_M;
-	print_board(board);
+	
 	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
 	assert(movesList->next != NULL); //more than one possible move
 	assert(movesList->next->next == NULL); //two possible moves
@@ -918,6 +918,16 @@ void unitTests()
 	
 	assert(movesList->move->dest->next == NULL);
 
+	//one eat with one option to not eat
+	board[3][3] = WHITE_M;
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 0);
+	assert(movesList->move->dest->pos->y == 4);
+	assert(movesList->move->dest->next == NULL);
 }
 
 
