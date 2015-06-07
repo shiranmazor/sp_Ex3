@@ -85,6 +85,7 @@ struct Move{
 	PosNode *dest;
 };
 
+
 void freeMove(Move *move)
 {
 	free(move->currPos);
@@ -98,6 +99,12 @@ void freeMove(Move *move)
 		
 	}
 	free(move);
+}
+
+void freeMoveNode(MoveNode *moveNode)
+{
+	freeMove(moveNode->move);
+	free(moveNode);
 }
 
 int getIntValue(char c)
@@ -598,8 +605,9 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 			if (moveNode == movesList) //firstElement
 			{
 				movesList = moveNode->next;
+				MoveNode *toFree = moveNode;
 				moveNode = moveNode->next;
-				freeMove(moveNode);
+				freeMoveNode(toFree);
 			}
 			else
 			{
@@ -927,6 +935,22 @@ void unitTests()
 	assert(movesList->move->eat == 1);
 	assert(movesList->move->dest->pos->x == 0);
 	assert(movesList->move->dest->pos->y == 4);
+	assert(movesList->move->dest->next == NULL);
+
+	//todo - try to eat down
+	pos.x = 1;
+	pos.y = 3;
+	clear_board(board);
+	board[2][2] = WHITE_M;
+	board[1][3] = BLACK_M;
+	print_board(board);
+	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, "down", 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 3);
+	assert(movesList->move->dest->pos->y == 1);
 	assert(movesList->move->dest->next == NULL);
 }
 
