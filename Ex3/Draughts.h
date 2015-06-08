@@ -64,6 +64,7 @@ int checkMoveIsValidMan( Move move, char* direction);
 int checkOnePosEat(Pos* curr, Pos* next);
 void performMove(Move move);
 int checkifPlayerWins(int player_color);
+Pos getOponnentPos(Pos* curr, Pos* next);
 
 MoveNode *getKingMoves(Pos pos);
 MoveNode *getManMoves(Pos pos);

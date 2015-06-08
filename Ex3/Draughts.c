@@ -728,7 +728,7 @@ void remove_disc(char* input)
 	if (pos)
 	{
 		int x_int = pos->x;
-		board[x_int][pos->y-1] = EMPTY;
+		board[x_int][pos->y] = EMPTY;
 	}
 	//freeArray(arr, arr_len);
 }
@@ -1064,13 +1064,13 @@ int isPlayerStuck(char player_man, char player_king, char opponent_man
 			{
 				if (board[i][j] == player_man)
 				{
-					if (checkClosedMovesMan(board, i, j, player_man, opponent_man, opponent_king, direction, 0) ==1)
+					if (checkClosedMovesMan(i, j, player_man, opponent_man, opponent_king, direction, 0) ==1)
 						hasMoves = 1;
 
 				}
 				else if (board[i][j] == player_king)
 				{
-					if (checkClosedMovesMan(board, i, j, player_man, opponent_man, opponent_king, direction, 1) == 1)
+					if (checkClosedMovesMan(i, j, player_man, opponent_man, opponent_king, direction, 1) == 1)
 						hasMoves = 1;
 				}
 			}
@@ -1452,6 +1452,32 @@ int checkMoveIsValidMan( Move move, char* direction)
 	
 }
 
+/*in case of a valid eating, return the pos of the oponnent on the board*/
+Pos getOponnentPos(Pos* curr, Pos* next)
+{
+	Pos oponnent_pos;
+	if (next->x == curr->x + 2 && next->y == curr->y + 2 )
+	{
+		oponnent_pos.x = curr->x + 1;
+		oponnent_pos.y = curr->y + 1;
+	}
+	else if (next->x == curr->x - 2 && next->y == curr->y + 2 )
+	{
+		oponnent_pos.x = curr->x - 1;
+		oponnent_pos.y = curr->y + 1;
+	}
+	else if (next->x == curr->x + 2 && next->y == curr->y - 2 )
+	{
+		oponnent_pos.x = curr->x + 1;
+		oponnent_pos.y = curr->y - 1;
+	}
+	else if (next->x == curr->x - 2 && next->y == curr->y - 2 )
+	{
+		oponnent_pos.x = curr->x - 1;
+		oponnent_pos.y = curr->y - 1;
+	}
+	return oponnent_pos;
+}
 int checkOnePosEat(Pos* curr, Pos* next,int player_color)
 {
 	//check if one eat move is valid'
@@ -1523,6 +1549,10 @@ void performMove(Move move)
 		char player = board[currPos->x][currPos->y];
 		board[currPos->x][currPos->y] = EMPTY;
 		board[nextPos->x][nextPos->y] = player;
+		//clean the oponnent disc:
+		Pos oponnent_pos = getOponnentPos(currPos, nextPos);
+		board[oponnent_pos.x][oponnent_pos.y] = EMPTY;
+
 		currPos = nextPos;
 		posList = posList->next;
 		nextPos = posList->pos;
@@ -1532,6 +1562,8 @@ void performMove(Move move)
 	char player = board[currPos->x][currPos->y];
 	board[currPos->x][currPos->y] = EMPTY;
 	board[nextPos->x][nextPos->y] = player;
+	Pos oponnent_pos = getOponnentPos(currPos, nextPos);
+	board[oponnent_pos.x][oponnent_pos.y] = EMPTY;
 }
 
 int main()
