@@ -36,13 +36,13 @@ typedef struct Move Move;
 typedef struct Players Players;
 
 int getIntValue(char c);
-int isPlayerStuck(char board[BOARD_SIZE][BOARD_SIZE], int color);
-void settingState(char board[BOARD_SIZE][BOARD_SIZE]);
-void GameState(char board[BOARD_SIZE][BOARD_SIZE]);
+int isPlayerStuck( int color);
+void settingState();
+void GameState();
 char* getString(FILE* fp, size_t size);
 char *trimwhitespace(char *str);
 int split(char *str, char c, char ***arr);
-void executeSettingCmd(char board[BOARD_SIZE][BOARD_SIZE], char* input);
+void executeSettingCmd(char* input);
 void freeArray(char** arrMul, int c);
 void reduceSpaces(char *str);
 char* replace(char *s, char ch, char *repl);
@@ -62,6 +62,8 @@ int userTurn();
 int performUserMove( Move move);
 int checkMoveIsValidMan( Move move, char* direction);
 int checkOnePosEat(Pos* curr, Pos* next);
+void performMove(Move move);
+int checkifPlayerWins(int player_color);
 
 MoveNode *getKingMoves(int x, int y);
 MoveNode *getManMoves(int x, int y);

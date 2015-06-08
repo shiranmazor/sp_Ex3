@@ -22,6 +22,7 @@ int minimax_depth = 1;
 int computer_color = BLACK;//by default the use played is white = 1
 int objectsInMemory = 0;
 Players game_players;
+
 void *myMalloc(size_t size) {
 	//printf("allocated memory!\n");
 	objectsInMemory++;
@@ -569,7 +570,8 @@ void set_disc(char* pos_input, char* color, char* type)
 	//int y = atoi(arr[1]);
 	if (pos == NULL)
 	{
-		printf("%s", WRONG_POSITION);
+		//printf("%s", WRONG_POSITION);
+		return;
 	}
 	else
 	{
@@ -863,7 +865,7 @@ void settingState()
 	free(command);
 }
 
-void executeSettingCmd( char* input)
+void executeSettingCmd(char* input)
 {
 	//trim all spaces from start and end:
 	input = trimwhitespace(input);
@@ -982,6 +984,11 @@ int computerTurn()
 }
 int userTurn()
 {
+	int player_color;
+	if (computer_color == BLACK)
+		player_color = WHITE;
+	else
+		player_color = BLACK;
 
 	printf("%s", ENTER_YOUR_MOVE);
 	char* command = getString(stdin, 10);
@@ -989,9 +996,28 @@ int userTurn()
 	{
 		Move *move = parseMoveCommand(command);
 		if (move != NULL)
+		{
 			performUserMove(*move);
+			print_board(board);
+			if (checkifPlayerWins(player_color) == 1)
+				exit(0);			
+		}
+			
 		free(move);
 	}
+}
+
+int checkifPlayerWins(int player_color)
+{
+	int scoreNum = score(player_color);
+	char* color = player_color == WHITE ? "WHITE" : "BLACK" ;
+	if (scoreNum == 100)
+	{
+		printf("%s%s", color, "player wins!\n");
+		return 1;
+	}
+		
+	return 0;
 }
 
 int performUserMove(Move move)
@@ -1020,17 +1046,15 @@ int performUserMove(Move move)
 		return 0;
 	}
 	//perform moves - if we eat set empty at opponent
-	//only one pos
+	performMove(move);
 
 }
-
-
 
 int checkMoveIsValidMan( Move move, char* direction)
 {
 	//no need to check pos border because we already check it in parse move
 	int player_color;
-	if (strcmp(direction, "up"))
+	if (strcmp(direction, "up") == 0)
 		player_color = WHITE;
 	else
 		player_color = BLACK;
@@ -1080,7 +1104,7 @@ int checkMoveIsValidMan( Move move, char* direction)
 		}
 		//check last move in the list
 		if (eatValid == 1)
-			eatValid = checkOnePosEat(board, currPos, nextPos);
+			eatValid = checkOnePosEat(currPos, nextPos, player_color);
 
 		valid = eatValid;
 
@@ -1147,6 +1171,28 @@ int checkOnePosEat(Pos* curr, Pos* next,int player_color)
 
 
 
+}
+
+void performMove(Move move)
+{
+	Pos *currPos = move.currPos;
+	Pos *nextPos = move.dest->pos;
+	PosNode *posList = move.dest;
+
+	while (posList->next != NULL)
+	{
+		char player = board[currPos->x][currPos->y];
+		board[currPos->x][currPos->y] = EMPTY;
+		board[nextPos->x][nextPos->y] = player;
+		currPos = nextPos;
+		posList = posList->next;
+		nextPos = posList->pos;
+	}
+
+	//single move or last move in list
+	char player = board[currPos->x][currPos->y];
+	board[currPos->x][currPos->y] = EMPTY;
+	board[nextPos->x][nextPos->y] = player;
 }
 
 int main()
