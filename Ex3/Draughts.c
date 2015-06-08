@@ -86,6 +86,7 @@ struct Move{
 	PosNode *dest;
 };
 
+
 void freeMove(Move *move)
 {
 	free(move->currPos);
@@ -99,6 +100,12 @@ void freeMove(Move *move)
 		
 	}
 	free(move);
+}
+
+void freeMoveNode(MoveNode *moveNode)
+{
+	freeMove(moveNode->move);
+	free(moveNode);
 }
 
 int getIntValue(char c)
@@ -347,7 +354,7 @@ void print_line(){
 
 
 
-MoveNode * getMoves(char userM, char userK)
+MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char * direction)
 {
 	MoveNode *firstMoveNode = NULL;
 	MoveNode *lastNode = NULL;
@@ -359,14 +366,19 @@ MoveNode * getMoves(char userM, char userK)
 		{
 			if ((i + j) % 2 == 0)
 			{
+				Pos pos;
+				pos.x = i;
+				pos.y = j;
+
 				MoveNode *move = NULL;
 				if (board[i, j] == userM)
 				{
-					move = getManMoves(i,j);
+					
+					move = getManMoves(pos, userM, userK, board, direction, 0, NULL);
 				}
 				else if (board[i,j] == userK)
 				{
-					move = getKingMoves(i, j);
+					move = getKingMoves(pos);
 				}
 
 				if (firstMoveNode == NULL)
@@ -380,26 +392,243 @@ MoveNode * getMoves(char userM, char userK)
 					lastNode = lastNode->next;
 				}
 			}
-
 		}
 	}
 	return firstMoveNode;
 }
 
-MoveNode *getAdjPositions(Pos pos)
+//returns false if pos is outside the board
+int isValidPos(Pos *pos)
 {
-
+	if (pos->x >= BOARD_SIZE || pos->x < 0 || pos->y >= BOARD_SIZE || pos->y < 0)
+		return 0;
+	return 1;
 }
 
-MoveNode *getKingMoves(int x, int y)
+Pos * getAdjPositions(Pos pos, Pos* adj[4])
+{
+	//down:
+	adj[0]->x = pos.x - 1;
+	adj[0]->y = pos.y - 1;
+
+	adj[1]->x = pos.x + 1;
+	adj[1]->y = pos.y - 1;
+
+	//up:
+	adj[2]->x = pos.x - 1;
+	adj[2]->y = pos.y + 1;
+
+	adj[3]->x = pos.x + 1;
+	adj[3]->y = pos.y + 1;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (!isValidPos(adj[i]))
+		{
+			free(adj[i]);
+			adj[i] = NULL;;
+		}
+	}
+	return adj;
+}
+
+
+MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char* direction, int onlyEatMove, Pos *capturedPos)
+{
+	Pos* adj[4] = { malloc(sizeof(Pos)), malloc(sizeof(Pos)), malloc(sizeof(Pos)), malloc(sizeof(Pos)) };
+	getAdjPositions(pos, adj);
+	MoveNode *movesList = NULL;
+	MoveNode *last = NULL;
+	int maxEats = 0;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if ((strcmp("up", direction) == 0) && i < 2) //moving in the wrong direction
+			continue;
+		if ((strcmp("down", direction) == 0) && i > 1) //moving in the wrong direction
+			continue;
+
+
+		if (adj[i] != NULL)
+		{
+			if (capturedPos != NULL && capturedPos->x == adj[i]->x && capturedPos->y == adj[i]->y) //we've just eated this one, no need to go back
+				continue;
+
+			char adjVal = board[adj[i]->x][adj[i]->y];
+			if (adjVal == userM || adjVal == userK) //can't eat, same team buddy!
+				continue;
+			
+
+			if (adjVal == EMPTY)
+			{
+				if (onlyEatMove) //we were requested to provide eat move only
+					continue;
+
+				MoveNode *moveNode = malloc(sizeof(MoveNode));
+				Move *move = malloc(sizeof(Move));
+				move->currPos = malloc(sizeof(Pos));
+				move->currPos->x = pos.x;
+				move->currPos->y = pos.y;
+				move->dest = malloc(sizeof(PosNode));
+
+				move->eat = 0;
+
+				moveNode->move = move;
+				moveNode->next = NULL;
+				
+				move->dest->pos = malloc(sizeof(Pos));
+				memcpy(move->dest->pos, adj[i], sizeof(Pos));
+				
+				move->dest->next = NULL;
+
+
+				if (!movesList) //empty list
+				{
+					movesList = moveNode;
+					last = movesList;
+				}
+				else
+				{
+					last->next = move;
+					last = last->next;
+				}
+				//todo free all?
+			}
+			else if (adjVal != userM && adjVal != userK) //eating?
+			{
+				int xDiff = adj[i]->x - pos.x;
+				int yDiff = adj[i]->y - pos.y;
+				char nextToolOnTheSamePath = board[adj[i]->x + xDiff][adj[i]->y + yDiff];
+				if (nextToolOnTheSamePath != EMPTY) //can't eat - invalid move
+					continue;
+
+				//yay! we can eat at least one! maybe more?
+
+				Pos destPos;
+				destPos.x = adj[i]->x + xDiff;
+				destPos.y = adj[i]->y + yDiff;
+				
+				MoveNode *nextMovesList = getManMoves(destPos, userM, userK, board, "both", 1, adj[i]); //"both" since we now can eat backword
+
+				if (maxEats < 1)
+					maxEats = 1;
+
+				if (!nextMovesList)
+				{
+					MoveNode *moveNode = malloc(sizeof(MoveNode));
+					Move *move = malloc(sizeof(Move));
+					move->currPos = malloc(sizeof(Pos));
+					move->currPos->x = pos.x;
+					move->currPos->y = pos.y;
+					move->dest = malloc(sizeof(PosNode));
+					move->dest->pos = malloc(sizeof(Pos));
+					move->dest->pos->x = destPos.x;
+					move->dest->pos->y = destPos.y;
+					move->dest->next = NULL;
+					move->eat = 1;
+					moveNode->move = move;
+					moveNode->next = NULL;
+
+					if (!movesList) //empty list
+					{
+						movesList = moveNode;
+						last = movesList;
+					}
+					else
+					{
+						last->next = moveNode;
+						last = last->next;
+					}
+
+					continue;
+					//todo free something?
+				}
+
+				MoveNode *moveNodeNew = nextMovesList;
+				while (moveNodeNew)
+				{
+					if (moveNodeNew->move->eat < maxEats)
+					{
+						moveNodeNew = moveNodeNew->next;
+						continue;
+					}
+					else
+					{
+						maxEats = 1 + moveNodeNew->move->eat;
+					}
+					MoveNode *moveNode = malloc(sizeof(MoveNode));
+					Move *move = malloc(sizeof(Move));
+					move->currPos = malloc(sizeof(Pos));
+					move->currPos->x = pos.x;
+					move->currPos->y = pos.y;
+					move->dest = malloc(sizeof(PosNode));
+					move->dest->pos = malloc(sizeof(Pos));
+					move->dest->pos->x = destPos.x;
+					move->dest->pos->y = destPos.y;
+					move->dest->next = NULL;
+
+					//move->dest->next = NULL;
+
+					move->eat = maxEats;
+
+					moveNode->move = move;
+					moveNode->next = NULL;
+
+					move->dest->next = moveNodeNew->move->dest;
+					moveNodeNew = moveNodeNew->next;
+					//free(moveNodeNew->move);
+
+					if (!movesList) //empty list
+					{
+						movesList = moveNode;
+						last = movesList;
+					}
+					else
+					{
+						last->next = move;
+						last = last->next;
+					}
+
+				}
+				//free(nextMovesList); //todo free nextMovesList
+				
+			}
+		}
+		free(adj[i]);
+	}
+
+	MoveNode *moveNode = movesList;
+	MoveNode *prev = movesList;
+	while (moveNode)
+	{
+		if (moveNode->move->eat < maxEats)
+		{
+			if (moveNode == movesList) //firstElement
+			{
+				movesList = moveNode->next;
+				MoveNode *toFree = moveNode;
+				moveNode = moveNode->next;
+				freeMoveNode(toFree);
+			}
+			else
+			{
+				prev->next = moveNode->next; //remove this element as it has low number of eats
+			}
+		}
+		prev = moveNode;
+		moveNode = moveNode->next;
+		
+	}
+	
+	return movesList;
+}
+
+MoveNode *getKingMoves(Pos pos)
 {
 	return NULL;
 }
 
-MoveNode *getManMoves(int x, int y)
-{
-	return NULL;
-}
+
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE])
 {
@@ -595,6 +824,8 @@ void set_disc(char* pos_input, char* color, char* type)
 
 void unitTests()
 {
+
+	//parse move:
 	char cmd[] = "move <b,2> to <b,4>";
 	trimwhitespace(cmd);
 	Move *res = parseMoveCommand(cmd);
@@ -615,6 +846,114 @@ void unitTests()
 	assert(res->dest->next->next->pos->x == 3 && res->dest->next->next->pos->y == 7);
 	freeMove(res);
 
+	//getManMoves
+
+	clear_board(board);
+
+	//No eating:
+	board[0][0] = WHITE_M;
+	Pos pos;
+	pos.x = 0;
+	pos.y = 0;
+
+	MoveNode *movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->dest->next == NULL);
+	assert(movesList->move->dest->pos->x == 1);
+	assert(movesList->move->dest->pos->y == 1);
+	assert(movesList->move->eat == 0);
+	//todo free movesList 
+
+	//eating one:
+	board[1][1] = BLACK_K;
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->dest->next == NULL);
+	assert(movesList->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 2);
+	assert(movesList->move->dest->pos->y == 2);
+
+
+	//eating two on the same path:
+	board[1][1] = BLACK_M;
+	board[3][3] = BLACK_M;
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 2);
+	assert(movesList->move->dest->pos->x == 2);
+	assert(movesList->move->dest->pos->y == 2);
+	assert(movesList->move->dest->next->pos->x == 4);
+	assert(movesList->move->dest->next->pos->y == 4);
+	assert(movesList->move->dest->next->next == NULL);
+
+	//eating backward:
+	board[3][3] = EMPTY;
+	board[3][1] = BLACK_M;
+	
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 2);
+	assert(movesList->move->dest->pos->x == 2);
+	assert(movesList->move->dest->pos->y == 2);
+	assert(movesList->move->dest->next->pos->x == 4);
+	assert(movesList->move->dest->next->pos->y == 0);
+	assert(movesList->move->dest->next->next == NULL);
+
+	pos.x = 2;
+	pos.y = 2;
+	clear_board(board);
+	board[2][2] = WHITE_M;
+	board[1][3] = BLACK_M;
+	board[3][3] = BLACK_M;
+	
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	assert(movesList->next != NULL); //more than one possible move
+	assert(movesList->next->next == NULL); //two possible moves
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 1);
+	assert(movesList->next->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 0);
+	assert(movesList->move->dest->pos->y == 4);
+	assert(movesList->next->move->dest->pos->x == 4);
+	assert(movesList->next->move->dest->pos->y == 4);
+	
+	assert(movesList->move->dest->next == NULL);
+
+	//one eat with one option to not eat
+	board[3][3] = WHITE_M;
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 0);
+	assert(movesList->move->dest->pos->y == 4);
+	assert(movesList->move->dest->next == NULL);
+
+	//todo - try to eat down
+	pos.x = 1;
+	pos.y = 3;
+	clear_board(board);
+	board[2][2] = WHITE_M;
+	board[1][3] = BLACK_M;
+	print_board(board);
+	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, "down", 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 3);
+	assert(movesList->move->dest->pos->y == 1);
+	assert(movesList->move->dest->next == NULL);
 }
 
 
