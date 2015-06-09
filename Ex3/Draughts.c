@@ -496,6 +496,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 			}
 			else if (adjVal != userM && adjVal != userK) //eating?
 			{
+				MoveNode *nextMovesList;
 				int xDiff = adj[i]->x - pos.x;
 				int yDiff = adj[i]->y - pos.y;
 				char nextToolOnTheSamePath = board[adj[i]->x + xDiff][adj[i]->y + yDiff];
@@ -511,7 +512,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				if (maxEats < 1)
 					maxEats = 1;
 
-				MoveNode *nextMovesList;
+				
 				if ((strcmp("up", direction) == 0) && destPos.y == BOARD_SIZE - 1) //becoming a king!
 					nextMovesList = NULL;
 				else if ((strcmp("down", direction) == 0) && destPos.y == 0) //becoming a king!
@@ -1110,7 +1111,7 @@ int isPlayerStuck(char player_man, char player_king, char opponent_man, char opp
 				}
 				else if (board[i][j] == player_king)
 				{
-					if (checkClosedMovesKing(i, j, player_man, opponent_man, opponent_king, direction, 1) == 1)
+					if (checkClosedMovesKing(i, j, player_man, player_king, opponent_man, opponent_king, direction, 1) == 1)
 						hasMoves = 1;
 				}
 			}
@@ -1211,9 +1212,35 @@ int checkClosedMovesMan(int i, int j, char player, char opponentM, char opponent
 
 }
 
-int checkClosedMovesKing(int i, int j, char player, char opponentM, char opponentK, char direction, int king)
+int checkClosedMovesKing(int i, int j, char playerM, char playerK, char opponentM, char opponentK, char direction, int king)
 {
-	return 0;
+	int hasMoves = 1;
+	if (i == 0 && j == 0)//left bottom
+	{
+
+	}
+	else if (i == 9 && j == 9)
+	{
+
+	}
+	else if (j = 0)//only first line
+	{
+
+	}
+	else if (j == 9)//only last line
+	{
+
+	}
+	else if (i = 0)//only first colunm
+	{
+
+	}
+	else if (i == 9)//only last column
+	{
+
+	}
+
+	return hasMoves;
 }
 
 void settingState()

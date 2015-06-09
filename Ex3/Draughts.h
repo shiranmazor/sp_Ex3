@@ -56,7 +56,7 @@ void set_disc(char* pos_input, char* color, char* type);
 int score(int player_color);
 int isPlayerStuck(char player_man, char player_king, char opponent_man, char opponent_king, char direction);
 int checkClosedMovesMan(int i, int j, char player, char opponentM, char opponentK, char direction, int king);
-int checkClosedMovesKing(int i, int j, char player, char opponentM, char opponentK, char direction, int king);
+int checkClosedMovesKing(int i, int j, char playerM,char playerK, char opponentM, char opponentK, char direction, int king);
 int computerTurn();
 int userTurn();
 int performUserMove( Move move);
