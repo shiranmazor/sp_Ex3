@@ -405,7 +405,7 @@ int isValidPos(Pos *pos)
 	return 1;
 }
 
-Pos * getAdjPositions(Pos pos, Pos* adj[4])
+Pos * getAdjPositions(Pos pos, Pos** adj)
 {
 	//down:
 	adj[0]->x = pos.x - 1;
@@ -435,7 +435,12 @@ Pos * getAdjPositions(Pos pos, Pos* adj[4])
 
 MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char* direction, int onlyEatMove, Pos *capturedPos)
 {
-	Pos* adj[4] = { malloc(sizeof(Pos)), malloc(sizeof(Pos)), malloc(sizeof(Pos)), malloc(sizeof(Pos)) };
+	Pos** adj = malloc(4*sizeof(Pos*));
+	for (int a = 0; a < 4; a++)
+	{
+		adj[a] = malloc(sizeof(Pos));
+	}
+
 	getAdjPositions(pos, adj);
 	MoveNode *movesList = NULL;
 	MoveNode *last = NULL;
@@ -600,11 +605,18 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					}
 
 				}
-				//free(nextMovesList); //todo free nextMovesList
-				
+				//free(nextMovesList); //todo free nextMovesList		
 			}
 		}
-		free(adj[i]);
+	}
+	
+	if (adj)
+	{
+		for (int a = 0; a < 4; a++)
+		{
+			free(adj[a]);
+		}
+		free(adj);
 	}
 
 	MoveNode *moveNode = movesList;
