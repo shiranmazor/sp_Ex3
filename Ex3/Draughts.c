@@ -1089,8 +1089,7 @@ int score(int player_color)
 
 }
 
-int isPlayerStuck(char player_man, char player_king, char opponent_man
-, char opponent_king, char* direction)
+int isPlayerStuck(char player_man, char player_king, char opponent_man, char opponent_king, char direction)
 {
 
 	int hasMoves = 0;//will change to 1 if we find one single move
@@ -1121,8 +1120,7 @@ int isPlayerStuck(char player_man, char player_king, char opponent_man
 
 }
 
-int checkClosedMovesMan(int i, int j, char player, 
-	char opponentM, char opponentK, char direction, int king)
+int checkClosedMovesMan(int i, int j, char player, char opponentM, char opponentK, char direction, int king)
 {
 	int hasMove = 0;
 	if ((direction == 'U') || king ==1)// j!=9 always because it's not a king
@@ -1855,7 +1853,7 @@ void performManMove(Move move, char direction)
 	
 }
 
-void performKingMove(Move move)
+void performKingMove(Move move, char direction)
 {
 	return;
 }
