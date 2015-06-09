@@ -53,7 +53,7 @@ void clear_board();
 void set_minimax_depth(int depth);
 void remove_disc(char* input);
 void set_disc(char* pos_input, char* color, char* type);
-int score(int player_color);
+int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color);
 int isPlayerStuck(char player_man, char player_king, char opponent_man, char opponent_king, char direction);
 int checkClosedMovesMan(int i, int j, char player, char opponentM, char opponentK, char direction, int king);
 int checkClosedMovesKing(int i, int j, char playerM,char playerK, char opponentM, char opponentK, char direction, int king);
@@ -63,12 +63,15 @@ int performUserMove( Move move);
 int checkMoveIsValidMan( Move move, char direction);
 int checkMoveIsValidKing(Move move, char direction);
 int checkOnePosEat(Pos* curr, Pos* next, int player_color);
-void performManMove(Move move, char direction);
-void performKingMove(Move move, char direction);
+
+void performMove(char board[BOARD_SIZE][BOARD_SIZE], char newBoard[BOARD_SIZE][BOARD_SIZE], Move move, char direction);
+void performManMove(char board[BOARD_SIZE][BOARD_SIZE],Move move, char direction);
+void performKingMove(char board[BOARD_SIZE][BOARD_SIZE],Move move, char direction);
 int checkifPlayerWins(int player_color);
 Pos getOponnentPos(Pos* curr, Pos* next);
 int isManBecomeKing(Pos* next, char direction);
-int minimax(int depth, int player, int alpha, int beta);
+int minimax(char board[BOARD_SIZE][BOARD_SIZE], int depth, int isMaxplayer, Move* bestMove);
+void copyMove(Move* oldMove, Move* newMove);
 
 MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char direction);
 MoveNode *getKingMoves(Pos pos);

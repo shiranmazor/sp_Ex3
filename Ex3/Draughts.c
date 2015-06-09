@@ -86,6 +86,29 @@ struct Move{
 	PosNode *dest;
 };
 
+void copyMove(Move* oldMove, Move* newMove)
+{
+	newMove = (Move*)malloc(sizeof(Move));
+	newMove->currPos = (Pos*)malloc(sizeof(Pos));
+	memcpy(newMove->currPos, oldMove->currPos, sizeof(newMove->currPos));
+	newMove->eat = oldMove->eat;
+
+	newMove->dest = (PosNode*)malloc(sizeof(PosNode));
+	//copy pos and all posNodes in the list by loop:
+	
+
+	while (oldMove->dest != NULL)
+	{
+		newMove->dest->pos = (Pos*)malloc(sizeof(Pos));
+		memcpy(newMove->dest->pos, oldMove->dest->pos, sizeof(newMove->dest->pos));
+		newMove->dest->next = (PosNode*)malloc(sizeof(PosNode));
+		memcpy(newMove->dest->next, oldMove->dest->next, sizeof(newMove->dest->next));
+
+		oldMove->dest = oldMove->dest->next;
+		newMove->dest = newMove->dest->next;
+	}
+	
+}
 
 void freeMove(Move *move)
 {
@@ -102,6 +125,17 @@ void freeMove(Move *move)
 	free(move);
 }
 
+void freeMoves(MoveNode *moveNodeHead)
+{
+	while (moveNodeHead != NULL)
+	{
+		Move* move = moveNodeHead->move;
+		freeMove(move);
+		MoveNode* currNode = moveNodeHead;
+		moveNodeHead = moveNodeHead->next;
+		free(currNode);
+	}
+}
 void freeMoveNode(MoveNode *moveNode)
 {
 	freeMove(moveNode->move);
@@ -1023,7 +1057,7 @@ void unitTests()
 }
 
 
-int score(int player_color)
+int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 {
 	int score = 0;
 	if (player_color == computer_color)
@@ -1513,16 +1547,24 @@ void GameState()
 			resComputer = computerTurn();
 		else
 			resUser = userTurn();
-	}
-		
+	}		
 
 }
 
 /*if computerTurn or playerTurn return 1 - they won otherwise return 0*/
 int computerTurn()
 {
-	//Todo:call minimax algorithm
+	//call minimax algorithm
+	Move* computerMove = NULL;
+	int scorRes = minimax(board, minimax_depth, 1, computerMove);
 	//perforam chosen  move
+	performMove(board, board, *computerMove, game_players.computer_direction);
+	//Todo:print computerMove!!
+
+	print_board(board);
+	if (checkifPlayerWins(computer_color) == 1)
+		return 1;
+
 	//if score is winning return 1 and print computer win!
 	return 0;
 }
@@ -1538,7 +1580,7 @@ int userTurn()
 	char* command = getString(stdin, 10);
 	if (strstr(command, "get_moves"))
 	{
-		//perform get moves for user
+		//Todo:perform get moves for user
 	}
 	else if (strstr(command, "move"))
 	{
@@ -1546,20 +1588,28 @@ int userTurn()
 		if (move != NULL)
 		{
 			performUserMove(*move);
-						
+
+			if (checkifPlayerWins(player_color) == 1)
+			{
+				freeMove(move);
+				free(command);
+				return 1;			
+			}						
 		}
 			
-		free(move);
+		freeMove(move);
 	}
 	else if (strstr(command, "quit"))
 	{
+		free(command);
 		exit(0);
 	}
+	free(command);
 }
 
 int checkifPlayerWins(int player_color)
 {
-	int scoreNum = score(player_color);
+	int scoreNum = score(board, player_color);
 	char* color = player_color == WHITE ? "WHITE" : "BLACK" ;
 	if (scoreNum == 100)
 	{
@@ -1613,18 +1663,14 @@ int performUserMove(Move move)
 	//perform moves - if we eat set empty at opponent
 	if (king == 0)
 	{
-		performManMove(move, game_players.user_direction);
+		performManMove(board, move, game_players.user_direction);
 		print_board(board);
-		if (checkifPlayerWins(player_color) == 1)
-			exit(0);
 	}
 		
 	else
 	{
-		performKingMove(move, game_players.user_direction);
-		print_board(board);
-		if (checkifPlayerWins(player_color) == 1)
-			exit(0);
+		performKingMove(board, move, game_players.user_direction);
+		print_board(board);	
 	}
 		
 
@@ -1965,7 +2011,7 @@ int checkOnePosEat(Pos* curr, Pos* next,int player_color)
 }
 
 //perform move for a man only, in case a man becomes a king - change player disc
-void performManMove(Move move, char direction)
+void performManMove(char board[BOARD_SIZE][BOARD_SIZE],Move move, char direction)
 {
 	Pos *currPos = move.currPos;
 	Pos *nextPos = move.dest->pos;
@@ -2031,7 +2077,7 @@ void performManMove(Move move, char direction)
 	
 }
 
-void performKingMove(Move move, char direction)
+void performKingMove(char board[BOARD_SIZE][BOARD_SIZE], Move move, char direction)
 {
 	char player_color;
 	char player_m;
@@ -2154,12 +2200,52 @@ void performKingMove(Move move, char direction)
 	
 }
 
+/*the  board reamin the same and the new one will contain the configuration after performing the move
+this function is for the minimax algo*/
+void performMove(char board[BOARD_SIZE][BOARD_SIZE], char newBoard[BOARD_SIZE][BOARD_SIZE], Move move, char direction)
+{
+	int king = 0;
+	char playerm;
+	char playerk;
+	int player_color = WHITE;
+	if (direction == game_players.computer_direction)
+	{
+		playerm = game_players.computer_m;
+		playerk = game_players.computer_k;
+		player_color = computer_color;
+	}
+	else
+	{
+		playerm = game_players.user_m;
+		playerk = game_players.user_k;
+		if (computer_color == WHITE)
+			player_color = BLACK;
+	}
+	//check if disc is king:
+	if (board[move.currPos->x][move.currPos->y] == playerk)
+		king = 1;
+	//copy board to move board:
+	for (int j =0; j <BOARD_SIZE ; j++)
+	{
+		for (int i = 0; i < BOARD_SIZE; i++)
+		{
+			newBoard[i][j] = board[i][j];
+		}
+	}
+	//perform the move on the new board:
+	if (king == 0)
+		performManMove(newBoard, move, direction);
+	else
+		performKingMove(newBoard, move, direction);
+}
+
 //recursive function for return the scoring result of the best move
-int minimax(int depth, int isMaxplayer, int alpha, int beta)
+int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move* bestMove)
 {
 	char playerm;
 	char playerk;
 	char direction;
+	
 	int player_color = WHITE;
 	//the computer is always max player
 	if (isMaxplayer == 1)
@@ -2179,18 +2265,61 @@ int minimax(int depth, int isMaxplayer, int alpha, int beta)
 	}
 	//get user and
 	MoveNode* moves = getMoves(board, playerm, playerk, direction);
-	//check if not moves or depth is 0
+	//check if no moves or depth is 0
 	if (moves == NULL || depth == 0)
 	{
-		int res = score(player_color);
+		int res = score(board, player_color);
 		free(moves);
 		return res;
 	}
-	else
+	else//############ let's generate minimax tree!
 	{
+		if (isMaxplayer == 1)//player is the computer
+		{
+			int bestValue = -100;
+
+			while (moves != NULL)
+			{
+				int newRes = 0;
+				char newBoard[BOARD_SIZE][BOARD_SIZE];
+				performMove(board, newBoard, *(moves->move), direction);
+				newRes = minimax(newBoard, depth - 1, 0, bestMove);
+				
+
+				//check if we are in first recursion
+				if (depth == minimax_depth && bestValue < newRes)
+				{
+					bestValue = newRes;
+					copyMove(moves->move, bestMove);
+				}
+					
+				moves = moves->next;
+			}
+			freeMoves(moves);
+			return bestValue;
+		}
+		else//player is the user:
+		{
+			int bestValue = 100;
+			while (moves != NULL)
+			{
+				int newRes = 0;
+				char newBoard[BOARD_SIZE][BOARD_SIZE];
+				performMove(board, newBoard, *(moves->move), direction);
+				newRes = minimax(newBoard, depth - 1, 1,bestMove);
+				if (bestValue > newRes)
+					bestValue = newRes;
+				
+
+				moves = moves->next;
+			}
+			freeMoves(moves);
+			return bestValue;
+
+		}
 
 	}
-
+	freeMoves(moves);
 }
 
 int main()
