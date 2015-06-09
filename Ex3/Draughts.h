@@ -68,7 +68,9 @@ void performKingMove(Move move, char direction);
 int checkifPlayerWins(int player_color);
 Pos getOponnentPos(Pos* curr, Pos* next);
 int isManBecomeKing(Pos* next, char direction);
+int minimax(int depth, int player, int alpha, int beta);
 
+MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char direction);
 MoveNode *getKingMoves(Pos pos);
-MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char* direction, int onlyEatMove, Pos *capturedPos);
+MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove, Pos *capturedPos);
 #endif  

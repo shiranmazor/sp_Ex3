@@ -354,7 +354,7 @@ void print_line(){
 
 
 
-MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char * direction)
+MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char direction)
 {
 	MoveNode *firstMoveNode = NULL;
 	MoveNode *lastNode = NULL;
@@ -433,7 +433,7 @@ Pos * getAdjPositions(Pos pos, Pos** adj)
 }
 
 
-MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char* direction, int onlyEatMove, Pos *capturedPos)
+MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove, Pos *capturedPos)
 {
 	Pos** adj = malloc(4*sizeof(Pos*));
 	for (int a = 0; a < 4; a++)
@@ -448,9 +448,9 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 
 	for (int i = 0; i < 4; i++)
 	{
-		if ((strcmp("up", direction) == 0) && i < 2) //moving in the wrong direction
+		if (direction == 'U' && i < 2) //moving in the wrong direction
 			continue;
-		if ((strcmp("down", direction) == 0) && i > 1) //moving in the wrong direction
+		if ((direction == 'D') && i > 1) //moving in the wrong direction
 			continue;
 
 
@@ -518,14 +518,12 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					maxEats = 1;
 
 				
-				if ((strcmp("up", direction) == 0) && destPos.y == BOARD_SIZE - 1) //becoming a king!
+				if ((direction == 'U') && destPos.y == BOARD_SIZE - 1) //becoming a king!
 					nextMovesList = NULL;
-				else if ((strcmp("down", direction) == 0) && destPos.y == 0) //becoming a king!
+				else if ((direction == 'D') && destPos.y == 0) //becoming a king!
 					nextMovesList = NULL;
 				else //no king created
 					nextMovesList = getManMoves(destPos, userM, userK, board, "both", 1, adj[i]); //"both" since we now can eat backword
-				
-
 				
 
 				if (!nextMovesList)
@@ -649,8 +647,6 @@ MoveNode *getKingMoves(Pos pos)
 {
 	return NULL;
 }
-
-
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE])
 {
@@ -878,7 +874,7 @@ void unitTests()
 	pos.x = 0;
 	pos.y = 0;
 
-	MoveNode *movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	MoveNode *movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -890,7 +886,7 @@ void unitTests()
 
 	//eating one:
 	board[1][1] = BLACK_K;
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -903,7 +899,7 @@ void unitTests()
 	//eating two on the same path:
 	board[1][1] = BLACK_M;
 	board[3][3] = BLACK_M;
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -918,7 +914,7 @@ void unitTests()
 	board[3][3] = EMPTY;
 	board[3][1] = BLACK_M;
 	
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -936,7 +932,7 @@ void unitTests()
 	board[1][3] = BLACK_M;
 	board[3][3] = BLACK_M;
 	
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next != NULL); //more than one possible move
 	assert(movesList->next->next == NULL); //two possible moves
 	assert(movesList->move->currPos->x == pos.x);
@@ -952,7 +948,7 @@ void unitTests()
 
 	//one eat with one option to not eat
 	board[3][3] = WHITE_M;
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -968,7 +964,7 @@ void unitTests()
 	board[2][2] = WHITE_M;
 	board[1][3] = BLACK_M;
 	//print_board(board);
-	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, "down", 0, NULL);
+	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, 'D', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -984,7 +980,7 @@ void unitTests()
 	board[3][7] = WHITE_M;
 	board[4][8] = BLACK_M;
 	board[6][8] = BLACK_M;
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, "up", 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -1000,7 +996,7 @@ void unitTests()
 	board[0][2] = BLACK_M;
 	board[1][1] = WHITE_M;
 	board[3][1] = WHITE_M;
-	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, "down", 0, NULL);
+	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, 'D', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -2140,6 +2136,45 @@ void performKingMove(Move move, char direction)
 
 	}
 	
+}
+
+//recursive function for return the scoring result of the best move
+int minimax(int depth, int isMaxplayer, int alpha, int beta)
+{
+	char playerm;
+	char playerk;
+	char direction;
+	int player_color = WHITE;
+	//the computer is always max player
+	if (isMaxplayer == 1)
+	{
+		player_color = computer_color;
+		playerk = game_players.computer_k;
+		playerm = game_players.computer_m;
+		direction = game_players.computer_direction;
+	}
+	else
+	{
+		if (computer_color == WHITE)
+			player_color = BLACK;
+		playerk = game_players.user_k;
+		playerm = game_players.user_m;
+		direction = game_players.user_direction;
+	}
+	//get user and
+	MoveNode* moves = getMoves(board, playerm, playerk, direction);
+	//check if not moves or depth is 0
+	if (moves == NULL || depth == 0)
+	{
+		int res = score(player_color);
+		free(moves);
+		return res;
+	}
+	else
+	{
+
+	}
+
 }
 
 int main()
