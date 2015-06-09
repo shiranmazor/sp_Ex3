@@ -86,29 +86,6 @@ struct Move{
 	PosNode *dest;
 };
 
-void copyMove(Move* oldMove, Move* newMove)
-{
-	newMove = (Move*)malloc(sizeof(Move));
-	newMove->currPos = (Pos*)malloc(sizeof(Pos));
-	memcpy(newMove->currPos, oldMove->currPos, sizeof(newMove->currPos));
-	newMove->eat = oldMove->eat;
-
-	newMove->dest = (PosNode*)malloc(sizeof(PosNode));
-	//copy pos and all posNodes in the list by loop:
-	
-
-	while (oldMove->dest != NULL)
-	{
-		newMove->dest->pos = (Pos*)malloc(sizeof(Pos));
-		memcpy(newMove->dest->pos, oldMove->dest->pos, sizeof(newMove->dest->pos));
-		newMove->dest->next = (PosNode*)malloc(sizeof(PosNode));
-		memcpy(newMove->dest->next, oldMove->dest->next, sizeof(newMove->dest->next));
-
-		oldMove->dest = oldMove->dest->next;
-		newMove->dest = newMove->dest->next;
-	}
-	
-}
 
 void freeMove(Move *move)
 {
@@ -125,13 +102,15 @@ void freeMove(Move *move)
 	free(move);
 }
 
-void freeMoves(MoveNode *moveNodeHead)
+void freeMoves(MoveNode *moveNodeHead, Move* notDelete)
 {
 	while (moveNodeHead != NULL)
 	{
-		Move* move = moveNodeHead->move;
-		freeMove(move);
 		MoveNode* currNode = moveNodeHead;
+		Move* move = moveNodeHead->move;
+		if (move != notDelete)
+			freeMove(move);
+		
 		moveNodeHead = moveNodeHead->next;
 		free(currNode);
 	}
@@ -2290,12 +2269,13 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 				if (depth == minimax_depth && bestValue < newRes)
 				{
 					bestValue = newRes;
-					copyMove(moves->move, bestMove);
+					bestMove = moves->move;
+					
 				}
 					
 				moves = moves->next;
 			}
-			freeMoves(moves);
+			freeMoves(moves, bestMove);
 			return bestValue;
 		}
 		else//player is the user:
@@ -2313,13 +2293,13 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 
 				moves = moves->next;
 			}
-			freeMoves(moves);
+			freeMoves(moves, bestMove);
 			return bestValue;
 
 		}
 
 	}
-	freeMoves(moves);
+	freeMoves(moves, bestMove);
 }
 
 int main()
