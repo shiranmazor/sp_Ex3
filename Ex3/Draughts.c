@@ -1229,27 +1229,137 @@ int checkClosedMovesKing(int i, int j, char playerM, char playerK, char opponent
 	int hasMoves = 1;
 	if (i == 0 && j == 0)//left bottom
 	{
+		if (board[i + 1][j + 1] == playerK || board[i + 1][j + 1] == playerM)
+			hasMoves = 0;
+		else if (board[i + 1][j + 1] == opponentK || board[i + 1][j + 1] == opponentM)
+		{
+			//check if can't it
+			if (board[i + 2][j + 2] != EMPTY)
+				hasMoves = 0;
+		}
 
 	}
 	else if (i == 9 && j == 9)
 	{
-
+		if (board[i - 1][j - 1] == playerK || board[i - 1][j - 1] == playerM)
+			hasMoves = 0;
+		else if (board[i -1][j - 1] == opponentK || board[i - 1][j - 1] == opponentM)
+		{
+			//check if can't it
+			if (board[i - 2][j - 2] != EMPTY)
+				hasMoves = 0;
+		}
 	}
 	else if (j = 0)//only first line
 	{
-
+		if (board[i - 1][j + 1] == playerK || board[i - 1][j + 1] == playerM)
+			hasMoves = 0;
+		else if (board[i - 1][j + 1] == opponentK || board[i - 1][j + 1] == opponentM)
+		{
+			//check if can't eat
+			if (board[i - 2][j + 2] != EMPTY)
+				hasMoves = 0;
+		}
+		else if (board[i + 1][j + 1] == playerK || board[i + 1][j + 1] == playerM)
+			hasMoves = 0;
+		else if (board[i + 1][j + 1] == opponentK || board[i + 1][j + 1] == opponentM)
+		{
+			// check if can't eat
+			if (board[i + 2][j + 2] != EMPTY)
+				hasMoves = 0;
+		}
 	}
 	else if (j == 9)//only last line
 	{
-
+		if (board[i - 1][j - 1] == playerK || board[i - 1][j - 1] == playerM)
+			hasMoves = 0;
+		else if (board[i - 1][j - 1] == opponentK || board[i - 1][j - 1] == opponentM)
+		{
+			//check if can't eat
+			if (board[i - 2][j - 2] != EMPTY)
+				hasMoves = 0;
+		}
+		else if (board[i + 1][j - 1] == playerK || board[i + 1][j - 1] == playerM)
+			hasMoves = 0;
+		else if (board[i + 1][j - 1] == opponentK || board[i + 1][j - 1] == opponentM)
+		{
+			// check if can't eat
+			if (board[i + 2][j - 2] != EMPTY)
+				hasMoves = 0;
+		}
 	}
 	else if (i = 0)//only first colunm
 	{
-
+		if (board[i + 1][j - 1] == playerK || board[i + 1][j - 1] == playerM)
+			hasMoves = 0;
+		else if (board[i + 1][j - 1] == opponentK || board[i + 1][j - 1] == opponentM)
+		{
+			//check if can't eat
+			if (board[i + 2][j - 2] != EMPTY)
+				hasMoves = 0;
+		}
+		else if (board[i + 1][j + 1] == playerK || board[i + 1][j + 1] == playerM)
+			hasMoves = 0;
+		else if (board[i + 1][j + 1] == opponentK || board[i + 1][j + 1] == opponentM)
+		{
+			// check if can't eat
+			if (board[i + 2][j + 2] != EMPTY)
+				hasMoves = 0;
+		}
 	}
 	else if (i == 9)//only last column
 	{
-
+		if (board[i - 1][j - 1] == playerK || board[i - 1][j - 1] == playerM)
+			hasMoves = 0;
+		else if (board[i - 1][j - 1] == opponentK || board[i - 1][j - 1] == opponentM)
+		{
+			//check if can't eat
+			if (board[i - 2][j - 2] != EMPTY)
+				hasMoves = 0;
+		}
+		else if (board[i - 1][j + 1] == playerK || board[i - 1][j +1] == playerM)
+			hasMoves = 0;
+		else if (board[i - 1][j + 1] == opponentK || board[i - 1][j + 1] == opponentM)
+		{
+			// check if can't eat
+			if (board[i - 2][j + 2] != EMPTY)
+				hasMoves = 0;
+		}
+	}
+	else// in the middle
+	{
+		if (board[i - 1][j - 1] == playerK || board[i - 1][j - 1] == playerM)
+			hasMoves = 0;
+		else if (board[i - 1][j - 1] == opponentK || board[i - 1][j - 1] == opponentM)
+		{
+			//check if can't eat
+			if (board[i - 2][j - 2] != EMPTY)
+				hasMoves = 0;
+		}
+		else if (board[i - 1][j + 1] == playerK || board[i - 1][j + 1] == playerM)
+			hasMoves = 0;
+		else if (board[i - 1][j + 1] == opponentK || board[i - 1][j + 1] == opponentM)
+		{
+			// check if can't eat
+			if (board[i - 2][j + 2] != EMPTY)
+				hasMoves = 0;
+		}
+		if (board[i + 1][j - 1] == playerK || board[i + 1][j - 1] == playerM)
+			hasMoves = 0;
+		else if (board[i + 1][j - 1] == opponentK || board[i + 1][j - 1] == opponentM)
+		{
+			//check if can't eat
+			if (board[i + 2][j - 2] != EMPTY)
+				hasMoves = 0;
+		}
+		else if (board[i + 1][j + 1] == playerK || board[i + 1][j + 1] == playerM)
+			hasMoves = 0;
+		else if (board[i + 1][j + 1] == opponentK || board[i + 1][j + 1] == opponentM)
+		{
+			// check if can't eat
+			if (board[i + 2][j + 2] != EMPTY)
+				hasMoves = 0;
+		}
 	}
 
 	return hasMoves;
@@ -1424,12 +1534,14 @@ int userTurn()
 		if (move != NULL)
 		{
 			performUserMove(*move);
-			print_board(board);
-			if (checkifPlayerWins(player_color) == 1)
-				exit(0);			
+						
 		}
 			
 		free(move);
+	}
+	else if (strstr(command, "quit"))
+	{
+		exit(0);
 	}
 }
 
@@ -1482,12 +1594,27 @@ int performUserMove(Move move)
 			return 0;
 		}
 	}
+	int player_color = WHITE;
+	if (computer_color == WHITE)
+		player_color = BLACK;
 		
 	//perform moves - if we eat set empty at opponent
-	if (king == 1)
+	if (king == 0)
+	{
 		performManMove(move, game_players.user_direction);
+		print_board(board);
+		if (checkifPlayerWins(player_color) == 1)
+			exit(0);
+	}
+		
 	else
+	{
 		performKingMove(move, game_players.user_direction);
+		print_board(board);
+		if (checkifPlayerWins(player_color) == 1)
+			exit(0);
+	}
+		
 
 }
 
@@ -1894,7 +2021,125 @@ void performManMove(Move move, char direction)
 
 void performKingMove(Move move, char direction)
 {
-	return;
+	char player_color;
+	char player_m;
+	char player_k;
+	char oponnet_m;
+	char oponnent_k;
+	if (direction == 'U')
+	{
+		player_color = WHITE;
+		player_m = WHITE_M;
+		player_k = WHITE_K;
+		oponnet_m = BLACK_M;
+		oponnent_k = BLACK_K;
+	}
+	else
+	{
+		player_color = BLACK;
+		player_m = BLACK_M;
+		player_k = BLACK_K;
+		oponnet_m = WHITE_M;
+		oponnent_k = WHITE_K;
+	}
+
+	Pos *currPos = move.currPos;
+	Pos *nextPos = move.dest->pos;
+	PosNode *posList = move.dest;
+	//first move is the hardest, after the first eat the eating is like a man
+	//case 1 - up right
+	if (currPos->x < nextPos->x && currPos->y < nextPos->y)
+	{
+		int i = currPos->x + 1;
+		int j = currPos->y + 1;
+		while (i <= nextPos->x && j <= nextPos->y)
+		{
+			
+			if (board[i][j] == oponnet_m || board[i][j] == oponnent_k)
+			{
+				board[i][j] = EMPTY;
+			}
+
+			i++;
+			j++;
+		}
+		board[currPos->x][currPos->y] = EMPTY;
+		board[nextPos->x][nextPos->y] = player_k;
+	}
+	else if (currPos->x < nextPos->x && currPos->y > nextPos->y)//down right
+	{
+		int i = currPos->x + 1;
+		int j = currPos->y - 1;
+		while (i <= nextPos->x && j >= nextPos->y)
+		{
+			if (board[i][j] == oponnet_m || board[i][j] == oponnent_k)
+			{
+				board[i][j] = EMPTY;
+			}
+			i++;
+			j--;
+		}
+		board[currPos->x][currPos->y] = EMPTY;
+		board[nextPos->x][nextPos->y] = player_k;
+	}
+	else if (currPos->x > nextPos->x && currPos->y < nextPos->y)//up left
+	{
+		int i = currPos->x - 1;
+		int j = currPos->y + 1;
+		while (i >= nextPos->x && j <= nextPos->y)
+		{
+			if (board[i][j] == oponnet_m || board[i][j] == oponnent_k)
+			{
+				board[i][j] = EMPTY;
+			}
+			i--;
+			j++;
+		}
+		board[currPos->x][currPos->y] = EMPTY;
+		board[nextPos->x][nextPos->y] = player_k;
+	}
+	else if (currPos->x > nextPos->x && currPos->y > nextPos->y)//down left
+	{
+		int i = currPos->x - 1;
+		int j = currPos->y - 1;
+		while (i >= nextPos->x && j >= nextPos->y)
+		{
+			if (board[i][j] == oponnet_m || board[i][j] == oponnent_k)
+			{
+				board[i][j] = EMPTY;
+			}
+			i--;
+			j--;
+		}
+		board[currPos->x][currPos->y] = EMPTY;
+		board[nextPos->x][nextPos->y] = player_k;
+	}
+	//done with first eating- now let's eat like a refgular man:
+	if (posList->next != NULL)
+	{
+		currPos = nextPos;
+		posList = posList->next;
+		nextPos = posList->pos;
+		while (posList->next != NULL)
+		{
+			char player = board[currPos->x][currPos->y];
+			board[currPos->x][currPos->y] = EMPTY;
+			board[nextPos->x][nextPos->y] = player;
+			//clean the oponnent disc:
+			Pos oponnent_pos = getOponnentPos(currPos, nextPos);
+			board[oponnent_pos.x][oponnent_pos.y] = EMPTY;
+
+			currPos = nextPos;
+			posList = posList->next;
+			nextPos = posList->pos;
+		}
+		//last eating:
+		char player = board[currPos->x][currPos->y];
+		board[currPos->x][currPos->y] = EMPTY;
+		board[nextPos->x][nextPos->y] = player;
+
+	}
+	
 }
 
 int main()
