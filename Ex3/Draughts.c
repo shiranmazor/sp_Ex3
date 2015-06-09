@@ -1443,9 +1443,9 @@ int performUserMove(Move move)
 		
 	//perform moves - if we eat set empty at opponent
 	if (king == 1)
-		performManMove(move);
+		performManMove(move, game_players.user_direction);
 	else
-		performKingMove(move);
+		performKingMove(move, game_players.user_direction);
 
 }
 
