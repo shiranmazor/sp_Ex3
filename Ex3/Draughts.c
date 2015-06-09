@@ -408,7 +408,7 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 				if (board[i, j] == userM)
 				{
 					
-					move = getManMoves(pos, userM, userK, board, direction, 0, NULL);
+					move = getManMoves(pos, userM, userK, board, direction, 0);
 				}
 				else if (board[i,j] == userK)
 				{
@@ -467,8 +467,18 @@ Pos * getAdjPositions(Pos pos, Pos** adj)
 }
 
 
-MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove, Pos *capturedPos)
+MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove)
 {
+	char curBoard[BOARD_SIZE][BOARD_SIZE];
+
+
+	//copy board
+	for (int i = 0; i<10; i++)
+	{
+		memcpy(&curBoard[i], &board[i], sizeof(board[0]));
+	}
+
+
 	Pos** adj = malloc(4*sizeof(Pos*));
 	for (int a = 0; a < 4; a++)
 	{
@@ -484,10 +494,10 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 	{
 		if (adj[i] != NULL)
 		{
-			if (capturedPos != NULL && capturedPos->x == adj[i]->x && capturedPos->y == adj[i]->y) //we've just eated this one, no need to go back
-				continue;
-
-			char adjVal = board[adj[i]->x][adj[i]->y];
+			/*if (capturedPos != NULL && capturedPos->x == adj[i]->x && capturedPos->y == adj[i]->y) //we've just eated this one, no need to go back
+				continue;*/
+			
+			char adjVal = curBoard[adj[i]->x][adj[i]->y];
 			if (adjVal == userM || adjVal == userK) //can't eat, same team buddy!
 				continue;
 			
@@ -537,7 +547,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				MoveNode *nextMovesList;
 				int xDiff = adj[i]->x - pos.x;
 				int yDiff = adj[i]->y - pos.y;
-				char nextToolOnTheSamePath = board[adj[i]->x + xDiff][adj[i]->y + yDiff];
+				char nextToolOnTheSamePath = curBoard[adj[i]->x + xDiff][adj[i]->y + yDiff];
 				if (nextToolOnTheSamePath != EMPTY) //can't eat - invalid move
 					continue;
 
@@ -550,14 +560,14 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				if (maxEats < 1)
 					maxEats = 1;
 
-				board[destPos.x][destPos.y] = EMPTY;
+				curBoard[adj[i]->x][adj[i]->y] = EMPTY;
 
 				if ((direction == 'U') && destPos.y == BOARD_SIZE - 1) //becoming a king!
 					nextMovesList = NULL;
 				else if ((direction == 'D') && destPos.y == 0) //becoming a king!
 					nextMovesList = NULL;
 				else //no king created
-					nextMovesList = getManMoves(destPos, userM, userK, board, 'b', 1, adj[i]); //"both" since we now can eat backword
+					nextMovesList = getManMoves(destPos, userM, userK, curBoard, 'b', 1); //"both" since we now can eat backword
 				
 
 				if (!nextMovesList)
@@ -907,9 +917,9 @@ void unitTests()
 	Pos pos;
 	pos.x = 0;
 	pos.y = 0;
-
-	MoveNode *movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
-	assert(movesList->next == NULL); //only one possible move
+	
+	MoveNode *movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0);
+ 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
 	assert(movesList->move->dest->next == NULL);
@@ -917,10 +927,11 @@ void unitTests()
 	assert(movesList->move->dest->pos->y == 1);
 	assert(movesList->move->eat == 0);
 	//todo free movesList 
-
+	
 	//eating one:
 	board[1][1] = BLACK_K;
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
+	
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -928,12 +939,12 @@ void unitTests()
 	assert(movesList->move->eat == 1);
 	assert(movesList->move->dest->pos->x == 2);
 	assert(movesList->move->dest->pos->y == 2);
-
+	
 
 	//eating two on the same path:
 	board[1][1] = BLACK_M;
 	board[3][3] = BLACK_M;
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -948,7 +959,7 @@ void unitTests()
 	board[3][3] = EMPTY;
 	board[3][1] = BLACK_M;
 
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -966,7 +977,7 @@ void unitTests()
 	board[1][3] = BLACK_M;
 	board[3][3] = BLACK_M;
 
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0);
 	assert(movesList->next != NULL); //more than one possible move
 	assert(movesList->next->next == NULL); //two possible moves
 	assert(movesList->move->currPos->x == pos.x);
@@ -982,7 +993,7 @@ void unitTests()
 
 	//one eat with one option to not eat
 	board[3][3] = WHITE_M;
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -998,7 +1009,7 @@ void unitTests()
 	board[2][2] = WHITE_M;
 	board[1][3] = BLACK_M;
 	
-	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, 'D', 0, NULL);
+	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, 'D', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -1014,7 +1025,7 @@ void unitTests()
 	board[3][7] = WHITE_M;
 	board[4][8] = BLACK_M;
 	board[6][8] = BLACK_M;
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -1030,7 +1041,7 @@ void unitTests()
 	board[0][2] = BLACK_M;
 	board[1][1] = WHITE_M;
 	board[3][1] = WHITE_M;
-	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, 'D', 0, NULL);
+	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, 'D', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
@@ -1046,7 +1057,7 @@ void unitTests()
 	board[1][1] = BLACK_M;
 	board[0][2] = WHITE_M;
 	//print_board(board);
-	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
 	assert(movesList->move->currPos->y == pos.y);
