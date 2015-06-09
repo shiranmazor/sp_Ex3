@@ -947,7 +947,7 @@ void unitTests()
 	//eating farward than backward:
 	board[3][3] = EMPTY;
 	board[3][1] = BLACK_M;
-	print_board(board);
+
 	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
@@ -1045,7 +1045,7 @@ void unitTests()
 	clear_board(board);
 	board[1][1] = BLACK_M;
 	board[0][2] = WHITE_M;
-	print_board(board);
+	//print_board(board);
 	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
