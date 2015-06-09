@@ -1111,7 +1111,7 @@ int isPlayerStuck(char player_man, char player_king, char opponent_man
 				}
 				else if (board[i][j] == player_king)
 				{
-					if (checkClosedMovesMan(i, j, player_man, opponent_man, opponent_king, direction, 1) == 1)
+					if (checkClosedMovesKing(i, j, player_man, opponent_man, opponent_king, direction, 1) == 1)
 						hasMoves = 1;
 				}
 			}
@@ -1211,6 +1211,11 @@ int checkClosedMovesMan(int i, int j, char player,
 	}
 	return hasMove;
 
+}
+
+int checkClosedMovesKing(int i, int j, char player, char opponentM, char opponentK, char direction, int king)
+{
+	return 0;
 }
 
 void settingState()
