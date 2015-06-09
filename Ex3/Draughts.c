@@ -448,12 +448,6 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 
 	for (int i = 0; i < 4; i++)
 	{
-		if (direction == 'U' && i < 2) //moving in the wrong direction
-			continue;
-		if ((direction == 'D') && i > 1) //moving in the wrong direction
-			continue;
-
-
 		if (adj[i] != NULL)
 		{
 			if (capturedPos != NULL && capturedPos->x == adj[i]->x && capturedPos->y == adj[i]->y) //we've just eated this one, no need to go back
@@ -467,6 +461,11 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 			if (adjVal == EMPTY)
 			{
 				if (onlyEatMove) //we were requested to provide eat move only
+					continue;
+
+				if (direction == 'U' && i < 2) //moving in the wrong direction
+					continue;
+				if ((direction == 'D') && i > 1) //moving in the wrong direction
 					continue;
 
 				MoveNode *moveNode = malloc(sizeof(MoveNode));
@@ -494,7 +493,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				}
 				else
 				{
-					last->next = move;
+					last->next = moveNode;
 					last = last->next;
 				}
 				//todo free all?
@@ -517,13 +516,14 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				if (maxEats < 1)
 					maxEats = 1;
 
-				
+				board[destPos.x][destPos.y] = EMPTY;
+
 				if ((direction == 'U') && destPos.y == BOARD_SIZE - 1) //becoming a king!
 					nextMovesList = NULL;
 				else if ((direction == 'D') && destPos.y == 0) //becoming a king!
 					nextMovesList = NULL;
 				else //no king created
-					nextMovesList = getManMoves(destPos, userM, userK, board, "both", 1, adj[i]); //"both" since we now can eat backword
+					nextMovesList = getManMoves(destPos, userM, userK, board, 'b', 1, adj[i]); //"both" since we now can eat backword
 				
 
 				if (!nextMovesList)
@@ -910,10 +910,10 @@ void unitTests()
 	assert(movesList->move->dest->next->pos->y == 4);
 	assert(movesList->move->dest->next->next == NULL);
 
-	//eating backward:
+	//eating farward than backward:
 	board[3][3] = EMPTY;
 	board[3][1] = BLACK_M;
-	
+	print_board(board);
 	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
@@ -931,7 +931,7 @@ void unitTests()
 	board[2][2] = WHITE_M;
 	board[1][3] = BLACK_M;
 	board[3][3] = BLACK_M;
-	
+
 	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
 	assert(movesList->next != NULL); //more than one possible move
 	assert(movesList->next->next == NULL); //two possible moves
@@ -963,7 +963,7 @@ void unitTests()
 	clear_board(board);
 	board[2][2] = WHITE_M;
 	board[1][3] = BLACK_M;
-	//print_board(board);
+	
 	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, 'D', 0, NULL);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
@@ -1002,6 +1002,22 @@ void unitTests()
 	assert(movesList->move->currPos->y == pos.y);
 	assert(movesList->move->eat == 1);
 	assert(movesList->move->dest->pos->x ==2);
+	assert(movesList->move->dest->pos->y == 0);
+	assert(movesList->move->dest->next == NULL);
+
+
+	
+	//eatin backward:
+	clear_board(board);
+	board[1][1] = BLACK_M;
+	board[0][2] = WHITE_M;
+	print_board(board);
+	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0, NULL);
+	assert(movesList->next == NULL); //only one possible move
+	assert(movesList->move->currPos->x == pos.x);
+	assert(movesList->move->currPos->y == pos.y);
+	assert(movesList->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 2);
 	assert(movesList->move->dest->pos->y == 0);
 	assert(movesList->move->dest->next == NULL);
 }
