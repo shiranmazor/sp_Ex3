@@ -1531,16 +1531,24 @@ void GameState()
 			resComputer = computerTurn();
 		else
 			resUser = userTurn();
-	}
-		
+	}		
 
 }
 
 /*if computerTurn or playerTurn return 1 - they won otherwise return 0*/
 int computerTurn()
 {
-	//Todo:call minimax algorithm
+	//call minimax algorithm
+	Move* computerMove = NULL;
+	int scorRes = minimax(board, minimax_depth, 1, computerMove);
 	//perforam chosen  move
+	performMove(board, board, *computerMove, game_players.computer_direction);
+	//Todo:print computerMove!!
+
+	print_board(board);
+	if (checkifPlayerWins(computer_color) == 1)
+		return 1;
+
 	//if score is winning return 1 and print computer win!
 	return 0;
 }
@@ -1556,7 +1564,7 @@ int userTurn()
 	char* command = getString(stdin, 10);
 	if (strstr(command, "get_moves"))
 	{
-		//perform get moves for user
+		//Todo:perform get moves for user
 	}
 	else if (strstr(command, "move"))
 	{
@@ -1564,15 +1572,23 @@ int userTurn()
 		if (move != NULL)
 		{
 			performUserMove(*move);
-						
+
+			if (checkifPlayerWins(player_color) == 1)
+			{
+				freeMove(move);
+				free(command);
+				return 1;			
+			}						
 		}
 			
-		free(move);
+		freeMove(move);
 	}
 	else if (strstr(command, "quit"))
 	{
+		free(command);
 		exit(0);
 	}
+	free(command);
 }
 
 int checkifPlayerWins(int player_color)
@@ -1633,16 +1649,12 @@ int performUserMove(Move move)
 	{
 		performManMove(board, move, game_players.user_direction);
 		print_board(board);
-		if (checkifPlayerWins(player_color) == 1)
-			exit(0);
 	}
 		
 	else
 	{
 		performKingMove(board, move, game_players.user_direction);
-		print_board(board);
-		if (checkifPlayerWins(player_color) == 1)
-			exit(0);
+		print_board(board);	
 	}
 		
 
@@ -2211,11 +2223,6 @@ void performMove(char board[BOARD_SIZE][BOARD_SIZE], char newBoard[BOARD_SIZE][B
 		performKingMove(newBoard, move, direction);
 }
 
-Move getComputerMove()
-{
-//	int scoringRes = minimax(board, minimax_depth, 1);
-	//now we find the move with this scoring
-}
 //recursive function for return the scoring result of the best move
 int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move* bestMove)
 {

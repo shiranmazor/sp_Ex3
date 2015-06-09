@@ -71,7 +71,7 @@ int checkifPlayerWins(int player_color);
 Pos getOponnentPos(Pos* curr, Pos* next);
 int isManBecomeKing(Pos* next, char direction);
 int minimax(char board[BOARD_SIZE][BOARD_SIZE], int depth, int isMaxplayer, Move* bestMove);
-Move getComputerMove();
+void copyMove(Move* oldMove, Move* newMove);
 
 MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char direction);
 MoveNode *getKingMoves(Pos pos);
