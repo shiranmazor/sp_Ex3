@@ -1005,10 +1005,10 @@ int score(int player_color)
 	}
 	else 
 	{
-		if (isPlayerStuck(board, game_players.user_m, game_players.user_k, game_players.computer_m,
+		if (isPlayerStuck(game_players.user_m, game_players.user_k, game_players.computer_m,
 			game_players.computer_k, game_players.user_direction) == 0)// we are stuck loose
 			score == -100;
-		else if (isPlayerStuck(board, game_players.computer_m, game_players.computer_k,
+		else if (isPlayerStuck(game_players.computer_m, game_players.computer_k,
 			game_players.user_m, game_players.user_k, game_players.computer_direction) == 0) // opponent stuck we win 
 			score = 100;
 		else
@@ -1081,10 +1081,10 @@ int isPlayerStuck(char player_man, char player_king, char opponent_man
 }
 
 int checkClosedMovesMan(int i, int j, char player, 
-	char opponentM, char opponentK, char* direction, int king)
+	char opponentM, char opponentK, char direction, int king)
 {
 	int hasMove = 0;
-	if ((strcmp(direction, "up") == 0) || king ==1)// j!=9 always because it's not a king
+	if ((direction == 'U') || king ==1)// j!=9 always because it's not a king
 	{
 		if (i == 0 && j == 0)//left bottom
 		{
@@ -1126,7 +1126,7 @@ int checkClosedMovesMan(int i, int j, char player,
 
 		}
 	}
-	else if (strcmp(direction,"down") == 0 || king ==1) // direction is down j !=0 always
+	else if (direction== 'D' || king ==1) // direction is down j !=0 always
 	{
 		if (i == 9 && j == 9)//right upper
 		{
@@ -1331,7 +1331,11 @@ int userTurn()
 
 	printf("%s", ENTER_YOUR_MOVE);
 	char* command = getString(stdin, 10);
-	if (strstr(command, "move"))
+	if (strstr(command, "get_moves"))
+	{
+		//perform get moves for user
+	}
+	else if (strstr(command, "move"))
 	{
 		Move *move = parseMoveCommand(command);
 		if (move != NULL)
@@ -1352,7 +1356,7 @@ int checkifPlayerWins(int player_color)
 	char* color = player_color == WHITE ? "WHITE" : "BLACK" ;
 	if (scoreNum == 100)
 	{
-		printf("%s%s", color, "player wins!\n");
+		printf("%s %s", color, "player wins!\n");
 		return 1;
 	}
 		
@@ -1365,12 +1369,11 @@ int performUserMove(Move move)
 	char user_k;
 	char computer_m;
 	char computer_k;
-	char* user_direction;
+	int king = 0;
+	//check if disc is king:
+	if (board[move.currPos->x][move.currPos->y] == game_players.user_k)
+		king = 1;
 	
-	if (game_players.user_m == WHITE_M)
-		user_direction = "up";
-	else
-		user_direction = "down";
 	
 	int x_int = move.currPos->x;
 	if (board[x_int][move.currPos->y] != game_players.user_m && board[x_int][move.currPos->y] != game_players.user_k)
@@ -1378,22 +1381,38 @@ int performUserMove(Move move)
 		printf("%s", NO_DICS);
 		return 0;
 	}
-	else if (checkMoveIsValidMan(move, user_direction) == 0)
+	else if (king == 0)
 	{
-		//move is not valid
-		printf("%s", ILLEGAL_MOVE);
-		return 0;
+		if (checkMoveIsValidMan(move, game_players.user_direction) == 0)//check man move
+		{
+			//move is not valid
+			printf("%s", ILLEGAL_MOVE);
+			return 0;
+		}
+	}	
+	else if (king == 1)
+	{
+		if (checkMoveIsValidKing(move, game_players.user_direction) == 0)//check king move
+		{
+			//move is not valid
+			printf("%s", ILLEGAL_MOVE);
+			return 0;
+		}
 	}
+		
 	//perform moves - if we eat set empty at opponent
-	performMove(move);
+	if (king == 1)
+		performManMove(move);
+	else
+		performKingMove(move);
 
 }
 
-int checkMoveIsValidMan( Move move, char* direction)
+int checkMoveIsValidMan( Move move, char direction)
 {
 	//no need to check pos border because we already check it in parse move
 	int player_color;
-	if (strcmp(direction, "up") == 0)
+	if (direction == 'U')
 		player_color = WHITE;
 	else
 		player_color = BLACK;
@@ -1411,7 +1430,7 @@ int checkMoveIsValidMan( Move move, char* direction)
 		eat = 1;
 	if (abs(curr_x_int - next_int_x) == 1 && abs(currPos->y - nextPos->y) == 1)//single move no eat
 	{
-		if (strcmp(direction, "up") == 0)
+		if (direction == 'U')
 		{
 			if (next_int_x == curr_x_int + 1 && nextPos->y == currPos->y + 1 && board[next_int_x][nextPos->y] == EMPTY)
 				valid = 1;
@@ -1432,16 +1451,22 @@ int checkMoveIsValidMan( Move move, char* direction)
 	{
 		int eatValid = 1;
 		PosNode *posList = move.dest;
+		//need also to check if the next eat turn man to king and there is more pos in posList then stop and not valid
 		
 		while (eatValid == 1 && posList->next != NULL)
 		{
+			if (isManBecomeKing(nextPos, direction) == 1)//posList->next != NULL
+			{
+				eatValid = 0;
+				break;
+			}
 			eatValid = checkOnePosEat(currPos, nextPos, player_color);
 
 			currPos = nextPos;
 			posList = posList->next;
 			nextPos = posList->pos;
 		}
-		//check last move in the list
+		//check last move in the list or one eating
 		if (eatValid == 1)
 			eatValid = checkOnePosEat(currPos, nextPos, player_color);
 
@@ -1450,6 +1475,184 @@ int checkMoveIsValidMan( Move move, char* direction)
 		return valid;
 	}
 	
+}
+
+int isManBecomeKing(Pos* next, char direction)
+{
+	if (direction == 'U' && next->y == 9)
+	{
+		return 1;
+	}
+	else if (direction == 'D' && next->y == 0)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+int checkMoveIsValidKing(Move move, char direction)
+{
+	int player_color;
+	char player_m;
+	char player_k;
+	char oponnet_m;
+	char oponnent_k;
+	if (direction == 'U')
+	{
+		player_color = WHITE;
+		player_m = WHITE_M;
+		player_k = WHITE_K;
+		oponnet_m = BLACK_M;
+		oponnent_k = BLACK_K;
+	}
+		
+	else
+	{
+		player_color = BLACK;
+		player_m = BLACK_M;
+		player_k = BLACK_K;
+		oponnet_m = WHITE_M;
+		oponnent_k = WHITE_K;
+	}
+		
+
+	int valid = 0;
+	int eat = 0;
+	Pos *currPos = move.currPos;
+	Pos *nextPos = move.dest->pos;
+	//we already check bounderies in parse move command
+	//check next pos is on diagonal of king pos
+	if (abs(currPos->x - nextPos->x) != abs(currPos->y - nextPos->y))
+	{
+		return valid;
+	}
+	else
+	{
+		//we are on diagonal
+		int empty = 1;
+		int opponent_count = 0;
+		//we have 4 cases
+		//case 1 - up right
+		if (currPos->x < nextPos->x && currPos->y < nextPos->y)
+		{
+			int i = currPos->x+1;
+			int j = currPos->y+1;
+			while (i <= nextPos->x && j <= nextPos->y)
+			{
+				if (board[i][j] == player_m || board[i][j] == player_k)
+				{
+					valid = 0;
+					return valid;
+				}
+				else if (board[i][j] == oponnet_m || board[i][j] == oponnent_k)
+				{
+					opponent_count++;
+				}
+
+				i++;
+				j++;
+			}
+		}
+		else if (currPos->x < nextPos->x && currPos->y > nextPos->y)//down right
+		{
+			int i = currPos->x+1;
+			int j = currPos->y-1;
+			while (i <= nextPos->x && j >= nextPos->y)
+			{
+				if (board[i][j] == player_m || board[i][j] == player_k)
+				{
+					valid = 0;
+					return valid;
+				}
+				else if (board[i][j] == oponnet_m || board[i][j] == oponnent_k)
+				{
+					opponent_count++;
+				}
+				i++;
+				j--;
+			}
+		}
+		else if (currPos->x > nextPos->x && currPos->y < nextPos->y)//up left
+		{
+			int i = currPos->x - 1;
+			int j = currPos->y + 1;
+			while (i >= nextPos->x && j <= nextPos->y)
+			{
+				if (board[i][j] == player_m || board[i][j] == player_k)
+				{
+					valid = 0;
+					return valid;
+				}
+				else if (board[i][j] == oponnet_m || board[i][j] == oponnent_k)
+				{
+					opponent_count++;
+				}
+				i--;
+				j++;
+			}
+		}
+		else if (currPos->x > nextPos->x && currPos->y > nextPos->y)//down left
+		{
+			int i = currPos->x - 1;
+			int j = currPos->y - 1;
+			while (i >= nextPos->x && j >= nextPos->y)
+			{
+				if (board[i][j] == player_m || board[i][j] == player_k)
+				{
+					valid = 0;
+					return valid;
+				}
+				else if (board[i][j] == oponnet_m || board[i][j] == oponnent_k)
+				{
+					opponent_count++;
+				}
+				i--;
+				j--;
+			}
+		}
+		if (opponent_count > 1)
+		{
+			valid = 0;
+			return valid;
+		}
+		//if we reached here thee diagonals are empty/ we have only one opponent player we can eat
+		PosNode *posList = move.dest;
+		if (opponent_count == 0 && posList->next != NULL)//we try to perform multiple move without eating
+		{
+			valid = 0;
+			return valid;
+		}
+		else if (posList->next == NULL)//no next, eating or not
+		{
+			valid = 1;
+			return valid;
+		}
+		else if (opponent_count == 1)//multiple eating
+		{
+			int eatValid = 1;
+			currPos = nextPos;//check multiple eating the same as man after first eating
+			posList = posList->next;
+			nextPos = posList->pos;
+			while (eatValid == 1 && posList->next != NULL)
+			{
+				eatValid = checkOnePosEat(currPos, nextPos, player_color);
+
+				currPos = nextPos;
+				posList = posList->next;
+				nextPos = posList->pos;
+			}
+			//check last move in the list
+			if (eatValid == 1)
+				eatValid = checkOnePosEat(currPos, nextPos, player_color);
+
+			valid = eatValid;
+		}
+		
+		return valid;
+	}
 }
 
 /*in case of a valid eating, return the pos of the oponnent on the board*/
@@ -1478,6 +1681,7 @@ Pos getOponnentPos(Pos* curr, Pos* next)
 	}
 	return oponnent_pos;
 }
+
 int checkOnePosEat(Pos* curr, Pos* next,int player_color)
 {
 	//check if one eat move is valid'
@@ -1538,32 +1742,76 @@ int checkOnePosEat(Pos* curr, Pos* next,int player_color)
 
 }
 
-void performMove(Move move)
+//perform move for a man only, in case a man becomes a king - change player disc
+void performManMove(Move move, char direction)
 {
 	Pos *currPos = move.currPos;
 	Pos *nextPos = move.dest->pos;
 	PosNode *posList = move.dest;
-
-	while (posList->next != NULL)
+	//if move is not eating - at man it will be that next
+	if (abs(currPos->x - nextPos->x) == 1 && abs(currPos->y - nextPos->y) == 1)
 	{
-		char player = board[currPos->x][currPos->y];
-		board[currPos->x][currPos->y] = EMPTY;
-		board[nextPos->x][nextPos->y] = player;
-		//clean the oponnent disc:
-		Pos oponnent_pos = getOponnentPos(currPos, nextPos);
-		board[oponnent_pos.x][oponnent_pos.y] = EMPTY;
+		if (isManBecomeKing(nextPos, direction))
+		{
+			board[currPos->x][currPos->y] = EMPTY;
+			if (direction == 'U')
+				board[nextPos->x][nextPos->y] = WHITE_K;
+			else
+				board[nextPos->x][nextPos->y] = BLACK_K;
+		}
+		else
+		{
+			char player = board[currPos->x][currPos->y];
+			board[currPos->x][currPos->y] = EMPTY;
+			board[nextPos->x][nextPos->y] = player;
+		}
+		
+	}
+	else//eating
+	{
+		while (posList->next != NULL)
+		{
+			char player = board[currPos->x][currPos->y];
+			board[currPos->x][currPos->y] = EMPTY;
+			board[nextPos->x][nextPos->y] = player;
+			//clean the oponnent disc:
+			Pos oponnent_pos = getOponnentPos(currPos, nextPos);
+			board[oponnent_pos.x][oponnent_pos.y] = EMPTY;
 
-		currPos = nextPos;
-		posList = posList->next;
-		nextPos = posList->pos;
+			currPos = nextPos;
+			posList = posList->next;
+			nextPos = posList->pos;
+		}
+
+		//first or last eat move in list - only single \last eat can turn user to a king!
+		//we check that the move is valid already
+		if (isManBecomeKing(nextPos, direction))
+		{
+			board[currPos->x][currPos->y] = EMPTY;
+			Pos oponnent_pos = getOponnentPos(currPos, nextPos);
+			board[oponnent_pos.x][oponnent_pos.y] = EMPTY;
+			if (direction == 'U')
+				board[nextPos->x][nextPos->y] = WHITE_K;
+			else
+				board[nextPos->x][nextPos->y] = BLACK_K;
+		}
+		else//no king
+		{
+			char player = board[currPos->x][currPos->y];
+			board[currPos->x][currPos->y] = EMPTY;
+			board[nextPos->x][nextPos->y] = player;
+			Pos oponnent_pos = getOponnentPos(currPos, nextPos);
+			board[oponnent_pos.x][oponnent_pos.y] = EMPTY;
+		}
+		
 	}
 
-	//single move or last move in list
-	char player = board[currPos->x][currPos->y];
-	board[currPos->x][currPos->y] = EMPTY;
-	board[nextPos->x][nextPos->y] = player;
-	Pos oponnent_pos = getOponnentPos(currPos, nextPos);
-	board[oponnent_pos.x][oponnent_pos.y] = EMPTY;
+	
+}
+
+void performKingMove(Move move)
+{
+	return;
 }
 
 int main()
@@ -1575,4 +1823,5 @@ int main()
 	//print_message(WRONG_MINIMAX_DEPTH);
 	//perror_message("TEST");
 	return 0;
+	scanf("%s");
 }
