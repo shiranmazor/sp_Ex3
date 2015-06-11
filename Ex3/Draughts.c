@@ -687,8 +687,37 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 	return movesList;
 }
 
-MoveNode *getKingMoves(Pos pos)
+MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove)
 {
+	char curBoard[BOARD_SIZE][BOARD_SIZE];
+
+
+	//copy board
+	for (int i = 0; i<10; i++)
+	{
+		memcpy(&curBoard[i], &board[i], sizeof(board[0]));
+	}
+
+
+	Pos** adj = malloc(4 * sizeof(Pos*));
+	for (int a = 0; a < 4; a++)
+	{
+		adj[a] = malloc(sizeof(Pos));
+	}
+
+	getAdjPositions(pos, adj);
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (adj[i] != NULL)
+			continue;
+
+		if (adj[i] == userK || adj[i] == userM) //blocked
+			continue; //todo free adj[i]
+
+	}
+
+
 	return NULL;
 }
 
