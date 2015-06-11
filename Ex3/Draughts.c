@@ -412,7 +412,7 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 				}
 				else if (board[i,j] == userK)
 				{
-					move = getKingMoves(pos);
+					//move = getKingMoves(pos);
 				}
 
 				if (firstMoveNode == NULL)
@@ -717,7 +717,10 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 
 	}
 
-
+	for (int i = 0; i < 4; i++)
+	{
+		free(adj[i]);
+	}
 	return NULL;
 }
 
