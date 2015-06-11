@@ -138,7 +138,8 @@ void freeMoves(MoveNode *moveNodeHead)
 }
 void freeMoveNode(MoveNode *moveNode)
 {
-	freeMove(moveNode->move);
+	if (moveNode != NULL)
+		freeMove(moveNode->move);
 	free(moveNode);
 }
 
@@ -472,14 +473,15 @@ MoveNode *keepOnlyMaxEatNodes(MoveNode *movesList, int maxEats)
 
 	while (moveNode)
 	{
+		MoveNode *toFree = NULL;
 		if (moveNode->move->eat < maxEats)
 		{
 			if (moveNode == movesList) //firstElement
 			{
 				movesList = moveNode->next;
-				MoveNode *toFree = moveNode;
-				moveNode = moveNode->next;
-				freeMoveNode(toFree);
+				toFree = moveNode;
+				//moveNode = moveNode->next;
+				
 			}
 			else
 			{
@@ -488,7 +490,7 @@ MoveNode *keepOnlyMaxEatNodes(MoveNode *movesList, int maxEats)
 		}
 		prev = moveNode;
 		moveNode = moveNode->next;
-
+		freeMoveNode(toFree);
 	}
 	return movesList;
 }
@@ -506,7 +508,7 @@ MoveNode *createMoveNode(Pos pos, Pos destPos, int eat)
 	move->dest->pos->x = destPos.x;
 	move->dest->pos->y = destPos.y;
 	move->dest->next = NULL;
-	move->eat = 1;
+	move->eat = eat;
 	moveNode->move = move;
 	moveNode->next = NULL;
 
@@ -557,23 +559,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				if ((direction == 'D') && i > 1) //moving in the wrong direction
 					continue;
 
-				MoveNode *moveNode = malloc(sizeof(MoveNode));
-				Move *move = malloc(sizeof(Move));
-				move->currPos = malloc(sizeof(Pos));
-				move->currPos->x = pos.x;
-				move->currPos->y = pos.y;
-				move->dest = malloc(sizeof(PosNode));
-
-				move->eat = 0;
-
-				moveNode->move = move;
-				moveNode->next = NULL;
-				
-				move->dest->pos = malloc(sizeof(Pos));
-				memcpy(move->dest->pos, adj[i], sizeof(Pos));
-				
-				move->dest->next = NULL;
-
+				MoveNode *moveNode = createMoveNode(pos, *(adj[i]), 0);
 
 				if (!movesList) //empty list
 				{
@@ -649,29 +635,12 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					{
 						maxEats = 1 + moveNodeNew->move->eat;
 					}
-					//MoveNode *moveNode = createMoveNode(pos, destPos, maxEats);
-					MoveNode *moveNode = malloc(sizeof(MoveNode));
-					Move *move = malloc(sizeof(Move));
-					move->currPos = malloc(sizeof(Pos));
-					move->currPos->x = pos.x;
-					move->currPos->y = pos.y;
-					move->dest = malloc(sizeof(PosNode));
-					move->dest->pos = malloc(sizeof(Pos));
-					move->dest->pos->x = destPos.x;
-					move->dest->pos->y = destPos.y;
-					move->dest->next = NULL;
+					MoveNode *moveNode = createMoveNode(pos, destPos, maxEats);
 
-					//move->dest->next = NULL;
-
-					move->eat = maxEats;
-					
-					moveNode->move = move;
-					moveNode->next = NULL;
-
-					move->dest->next = moveNodeNew->move->dest;
+					moveNode->move->dest->next = moveNodeNew->move->dest;
 					moveNodeNew = moveNodeNew->next;
 					//free(moveNodeNew->move);
-
+					
 					if (!movesList) //empty list
 					{
 						movesList = moveNode;
@@ -679,7 +648,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					}
 					else
 					{
-						last->next = move;
+						last->next = moveNode;
 						last = last->next;
 					}
 
@@ -790,19 +759,7 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 			if (!nextMovesList) //can't eat more
 			{
 				//addMoveNodeToList(MoveNode* moveNode, Pos currPos, Pos destPos, int eat, MoveNode* last)
-				MoveNode *moveNode = malloc(sizeof(MoveNode));
-				Move *move = malloc(sizeof(Move));
-				move->currPos = malloc(sizeof(Pos));
-				move->currPos->x = pos.x;
-				move->currPos->y = pos.y;
-				move->dest = malloc(sizeof(PosNode));
-				move->dest->pos = malloc(sizeof(Pos));
-				move->dest->pos->x = mustBeEmptyInOrderToEat->x;
-				move->dest->pos->y = mustBeEmptyInOrderToEat->y;
-				move->dest->next = NULL;
-				move->eat = 1;
-				moveNode->move = move;
-				moveNode->next = NULL;
+				MoveNode *moveNode = createMoveNode(pos, *(mustBeEmptyInOrderToEat), 1);
 
 				if (!movesList) //empty list
 				{
@@ -833,25 +790,9 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 				{
 					maxEats = 1 + moveNodeNew->move->eat;
 				}
-				MoveNode *moveNode = malloc(sizeof(MoveNode));
-				Move *move = malloc(sizeof(Move));
-				move->currPos = malloc(sizeof(Pos));
-				move->currPos->x = pos.x;
-				move->currPos->y = pos.y;
-				move->dest = malloc(sizeof(PosNode));
-				move->dest->pos = malloc(sizeof(Pos));
-				move->dest->pos->x = mustBeEmptyInOrderToEat->x;
-				move->dest->pos->y = mustBeEmptyInOrderToEat->y;
-				move->dest->next = NULL;
+				MoveNode *moveNode = createMoveNode(pos, *(mustBeEmptyInOrderToEat), maxEats);
 
-				//move->dest->next = NULL;
-
-				move->eat = maxEats;
-
-				moveNode->move = move;
-				moveNode->next = NULL;
-
-				move->dest->next = moveNodeNew->move->dest;
+				moveNode->move->dest->next = moveNodeNew->move->dest;
 				moveNodeNew = moveNodeNew->next;
 				//free(moveNodeNew->move);
 
@@ -862,7 +803,7 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 				}
 				else
 				{
-					last->next = move;
+					last->next = moveNode;
 					last = last->next;
 				}
 
