@@ -677,7 +677,6 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 {
 	char curBoard[BOARD_SIZE][BOARD_SIZE];
 
-
 	//copy board
 	for (int i = 0; i<10; i++)
 	{
@@ -706,6 +705,7 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 		if (adjVal == userK || adjVal == userM) //blocked
 			continue; //todo free adj[i]
 
+		//todo check if adjval == oponent and eat
 		if (adjVal == EMPTY)
 		{
 			MoveNode *nextMovesList;
@@ -722,6 +722,19 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 			char nextToolOnTheSamePath = curBoard[nextPosOnSameDirection->x][nextPosOnSameDirection->y];
 			while (nextToolOnTheSamePath == EMPTY)
 			{
+				MoveNode *moveNode = createMoveNode(pos, *(nextPosOnSameDirection), 0);
+				
+				if (!movesList) //empty list
+				{
+					movesList = moveNode;
+					last = movesList;
+				}
+				else
+				{
+					last->next = moveNode;
+					last = last->next;
+				}
+
 				//todo create move for each one of this empty positions
 				nextPosOnSameDirection->x += xDiff;
 				nextPosOnSameDirection->y += yDiff;
@@ -753,6 +766,8 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 			if (maxEats < 1)
 				maxEats = 1;
 
+			curBoard[adj[i]->x][adj[i]->y] = EMPTY;
+
 			//maybe we can eat more!
 			nextMovesList = getManMoves(*(mustBeEmptyInOrderToEat), userM, userK, curBoard, 'b', 1); //"both" since we now can eat backword
 			
@@ -775,7 +790,6 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 				continue;
 				//todo free something?
 			}
-
 
 			//maybe we ate more!
 			MoveNode *moveNodeNew = nextMovesList;
@@ -806,10 +820,8 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 					last->next = moveNode;
 					last = last->next;
 				}
-
 			}
 		}
-
 	}
 
 	if (adj)
@@ -821,8 +833,8 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 		free(adj);
 	}
 
-	keepOnlyMaxEatNodes(movesList, maxEats);
-	return NULL;
+	movesList = keepOnlyMaxEatNodes(movesList, maxEats);
+	return movesList;
 }
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE])
