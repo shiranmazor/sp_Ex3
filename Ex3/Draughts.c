@@ -407,7 +407,6 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 				MoveNode *move = NULL;
 				if (board[i, j] == userM)
 				{
-					
 					move = getManMoves(pos, userM, userK, board, direction, 0);
 				}
 				else if (board[i,j] == userK)
@@ -547,6 +546,9 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				MoveNode *nextMovesList;
 				int xDiff = adj[i]->x - pos.x;
 				int yDiff = adj[i]->y - pos.y;
+				if (adj[i]->x + xDiff > BOARD_SIZE || adj[i]->x + xDiff<0 || adj[i]->y + yDiff > BOARD_SIZE || adj[i]->y + yDiff < 0) //next tool in this direction is outside the board
+					continue;
+
 				char nextToolOnTheSamePath = curBoard[adj[i]->x + xDiff][adj[i]->y + yDiff];
 				if (nextToolOnTheSamePath != EMPTY) //can't eat - invalid move
 					continue;
@@ -707,13 +709,71 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 
 	getAdjPositions(pos, adj);
 
+	MoveNode *movesList = NULL;
+	MoveNode *last = NULL;
+	int maxEats = 0;
+
 	for (int i = 0; i < 4; i++)
 	{
 		if (adj[i] != NULL)
 			continue;
 
-		if (adj[i] == userK || adj[i] == userM) //blocked
+		char adjVal = curBoard[adj[i]->x][adj[i]->y];
+		if (adjVal == userK || adjVal == userM) //blocked
 			continue; //todo free adj[i]
+
+		if (adjVal == EMPTY)
+		{
+			MoveNode *nextMovesList;
+
+			int xDiff = adj[i]->x - pos.x;
+			int yDiff = adj[i]->y - pos.y;
+			Pos *nextPosOnSameDirection;
+			nextPosOnSameDirection->x = adj[i]->x + xDiff;
+			nextPosOnSameDirection->y = adj[i]->y + yDiff;
+
+			if (!isValidPos(nextPosOnSameDirection)) //we reached end of board
+				continue;
+
+			char nextToolOnTheSamePath = curBoard[nextPosOnSameDirection->x][nextPosOnSameDirection->y];
+			while (nextToolOnTheSamePath == EMPTY)
+			{
+				//todo create move for each one of this empty positions
+				nextPosOnSameDirection->x += xDiff;
+				nextPosOnSameDirection->y += yDiff;
+				
+				if (!isValidPos(nextPosOnSameDirection))
+					break;
+
+				nextToolOnTheSamePath = curBoard[nextPosOnSameDirection->x][nextPosOnSameDirection->y];
+			}
+			
+			if (!isValidPos(nextPosOnSameDirection))
+				continue;
+
+			if (nextPosOnSameDirection == userK || nextPosOnSameDirection == userM) //can't move further, we reached the same color
+				continue;
+
+			//if you reached here maybe you have something to eat!!
+			Pos *mustBeEmptyInOrderToEat;
+			mustBeEmptyInOrderToEat->x = nextPosOnSameDirection->x + xDiff;
+			mustBeEmptyInOrderToEat->y = nextPosOnSameDirection->y += yDiff;
+
+			if (!isValidPos(mustBeEmptyInOrderToEat)) //blocked
+				continue;
+
+			if (curBoard[mustBeEmptyInOrderToEat->x][mustBeEmptyInOrderToEat->y] != EMPTY) //can't eat, two tools in a row
+				continue;
+
+			//now we can eat!@#!
+			if (maxEats < 1)
+				maxEats = 1;
+
+			//maybe we can eat more!
+			nextMovesList = getManMoves(*(mustBeEmptyInOrderToEat), userM, userK, curBoard, 'b', 1); //"both" since we now can eat backword
+			
+
+		}
 
 	}
 
