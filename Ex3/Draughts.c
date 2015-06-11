@@ -465,7 +465,53 @@ Pos * getAdjPositions(Pos pos, Pos** adj)
 	return adj;
 }
 
+MoveNode *keepOnlyMaxEatNodes(MoveNode *movesList, int maxEats)
+{
+	MoveNode *prev = movesList;
+	MoveNode *moveNode = movesList;
 
+	while (moveNode)
+	{
+		if (moveNode->move->eat < maxEats)
+		{
+			if (moveNode == movesList) //firstElement
+			{
+				movesList = moveNode->next;
+				MoveNode *toFree = moveNode;
+				moveNode = moveNode->next;
+				freeMoveNode(toFree);
+			}
+			else
+			{
+				prev->next = moveNode->next; //remove this element as it has low number of eats
+			}
+		}
+		prev = moveNode;
+		moveNode = moveNode->next;
+
+	}
+	return movesList;
+}
+
+
+MoveNode *createMoveNode(Pos pos, Pos destPos, int eat)
+{
+	MoveNode *moveNode = malloc(sizeof(MoveNode));
+	Move *move = malloc(sizeof(Move));
+	move->currPos = malloc(sizeof(Pos));
+	move->currPos->x = pos.x;
+	move->currPos->y = pos.y;
+	move->dest = malloc(sizeof(PosNode));
+	move->dest->pos = malloc(sizeof(Pos));
+	move->dest->pos->x = destPos.x;
+	move->dest->pos->y = destPos.y;
+	move->dest->next = NULL;
+	move->eat = 1;
+	moveNode->move = move;
+	moveNode->next = NULL;
+
+	return moveNode;
+}
 MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove)
 {
 	char curBoard[BOARD_SIZE][BOARD_SIZE];
@@ -574,19 +620,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 
 				if (!nextMovesList)
 				{
-					MoveNode *moveNode = malloc(sizeof(MoveNode));
-					Move *move = malloc(sizeof(Move));
-					move->currPos = malloc(sizeof(Pos));
-					move->currPos->x = pos.x;
-					move->currPos->y = pos.y;
-					move->dest = malloc(sizeof(PosNode));
-					move->dest->pos = malloc(sizeof(Pos));
-					move->dest->pos->x = destPos.x;
-					move->dest->pos->y = destPos.y;
-					move->dest->next = NULL;
-					move->eat = 1;
-					moveNode->move = move;
-					moveNode->next = NULL;
+					MoveNode *moveNode  = createMoveNode(pos, destPos, 1);
 
 					if (!movesList) //empty list
 					{
@@ -615,6 +649,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					{
 						maxEats = 1 + moveNodeNew->move->eat;
 					}
+					//MoveNode *moveNode = createMoveNode(pos, destPos, maxEats);
 					MoveNode *moveNode = malloc(sizeof(MoveNode));
 					Move *move = malloc(sizeof(Move));
 					move->currPos = malloc(sizeof(Pos));
@@ -629,7 +664,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					//move->dest->next = NULL;
 
 					move->eat = maxEats;
-
+					
 					moveNode->move = move;
 					moveNode->next = NULL;
 
@@ -663,28 +698,8 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 		free(adj);
 	}
 
-	MoveNode *moveNode = movesList;
-	MoveNode *prev = movesList;
-	while (moveNode)
-	{
-		if (moveNode->move->eat < maxEats)
-		{
-			if (moveNode == movesList) //firstElement
-			{
-				movesList = moveNode->next;
-				MoveNode *toFree = moveNode;
-				moveNode = moveNode->next;
-				freeMoveNode(toFree);
-			}
-			else
-			{
-				prev->next = moveNode->next; //remove this element as it has low number of eats
-			}
-		}
-		prev = moveNode;
-		moveNode = moveNode->next;
-		
-	}
+	//MoveNode *moveNode = movesList;
+	movesList= keepOnlyMaxEatNodes(movesList, maxEats);
 	
 	return movesList;
 }
@@ -772,15 +787,100 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 			//maybe we can eat more!
 			nextMovesList = getManMoves(*(mustBeEmptyInOrderToEat), userM, userK, curBoard, 'b', 1); //"both" since we now can eat backword
 			
+			if (!nextMovesList) //can't eat more
+			{
+				//addMoveNodeToList(MoveNode* moveNode, Pos currPos, Pos destPos, int eat, MoveNode* last)
+				MoveNode *moveNode = malloc(sizeof(MoveNode));
+				Move *move = malloc(sizeof(Move));
+				move->currPos = malloc(sizeof(Pos));
+				move->currPos->x = pos.x;
+				move->currPos->y = pos.y;
+				move->dest = malloc(sizeof(PosNode));
+				move->dest->pos = malloc(sizeof(Pos));
+				move->dest->pos->x = mustBeEmptyInOrderToEat->x;
+				move->dest->pos->y = mustBeEmptyInOrderToEat->y;
+				move->dest->next = NULL;
+				move->eat = 1;
+				moveNode->move = move;
+				moveNode->next = NULL;
 
+				if (!movesList) //empty list
+				{
+					movesList = moveNode;
+					last = movesList;
+				}
+				else
+				{
+					last->next = moveNode;
+					last = last->next;
+				}
+
+				continue;
+				//todo free something?
+			}
+
+
+			//maybe we ate more!
+			MoveNode *moveNodeNew = nextMovesList;
+			while (moveNodeNew)
+			{
+				if (moveNodeNew->move->eat < maxEats)
+				{
+					moveNodeNew = moveNodeNew->next;
+					continue;
+				}
+				else
+				{
+					maxEats = 1 + moveNodeNew->move->eat;
+				}
+				MoveNode *moveNode = malloc(sizeof(MoveNode));
+				Move *move = malloc(sizeof(Move));
+				move->currPos = malloc(sizeof(Pos));
+				move->currPos->x = pos.x;
+				move->currPos->y = pos.y;
+				move->dest = malloc(sizeof(PosNode));
+				move->dest->pos = malloc(sizeof(Pos));
+				move->dest->pos->x = mustBeEmptyInOrderToEat->x;
+				move->dest->pos->y = mustBeEmptyInOrderToEat->y;
+				move->dest->next = NULL;
+
+				//move->dest->next = NULL;
+
+				move->eat = maxEats;
+
+				moveNode->move = move;
+				moveNode->next = NULL;
+
+				move->dest->next = moveNodeNew->move->dest;
+				moveNodeNew = moveNodeNew->next;
+				//free(moveNodeNew->move);
+
+				if (!movesList) //empty list
+				{
+					movesList = moveNode;
+					last = movesList;
+				}
+				else
+				{
+					last->next = move;
+					last = last->next;
+				}
+
+			}
 		}
 
 	}
 
-	for (int i = 0; i < 4; i++)
+	if (adj)
 	{
-		free(adj[i]);
+		for (int a = 0; a < 4; a++)
+		{
+			free(adj[a]);
+		}
+		free(adj);
 	}
+
+	keepOnlyMaxEatNodes(movesList, maxEats);
 	return NULL;
 }
 
@@ -1100,7 +1200,7 @@ void unitTests()
 	clear_board(board);
 	board[2][2] = WHITE_M;
 	board[1][3] = BLACK_M;
-	
+
 	movesList = getManMoves(pos, BLACK_M, BLACK_K, board, 'D', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
