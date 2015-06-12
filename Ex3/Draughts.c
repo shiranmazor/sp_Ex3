@@ -1192,8 +1192,23 @@ void unitTests()
 	assert(movesList->move->dest->next == NULL);
 
 	init_board(board);
+	
 	MoveNode * list = getMoves(board, WHITE_M, WHITE_K, 'U');
 	assert(list != NULL);
+	int movesCount = 0;
+	MoveNode *node = list;
+	int x = 1;
+	while (node)
+	{
+		movesCount++;
+		assert(node->move->eat == 0);
+		assert(node->move->currPos->y == 3);
+		assert(node->move->currPos->x == x);
+		if (movesCount % 2 == 0)
+			x += 2;
+		node = node->next;
+	}
+	assert(movesCount == 9);
 	//printf("done ut");
 }
 
