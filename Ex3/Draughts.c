@@ -374,25 +374,30 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 				pos.x = i;
 				pos.y = j;
 
-				MoveNode *move = NULL;
+				MoveNode *movesList = NULL;
 				if (board[i][j] == userM)
 				{
-					move = getManMoves(pos, userM, userK, board, direction, 0);
+					movesList = getManMoves(pos, userM, userK, board, direction, 0);
 				}
 				else if (board[i][j] == userK)
 				{
-					//move = getKingMoves(pos);
+					//movesList = getKingMoves(pos);
 				}
 
-				if (firstMoveNode == NULL)
+				MoveNode *moveNode = movesList;
+				while (moveNode)
 				{
-					firstMoveNode = move;
-					lastNode = move;
-				}
-				else
-				{
-					lastNode->next = move;
-					lastNode = lastNode->next;
+					if (firstMoveNode == NULL)
+					{
+						firstMoveNode = moveNode;
+						lastNode = moveNode;
+					}
+					else
+					{
+						lastNode->next = moveNode;
+						lastNode = lastNode->next;
+					}
+					moveNode = moveNode->next;
 				}
 			}
 		}
@@ -1175,6 +1180,10 @@ void unitTests()
 	assert(movesList->move->dest->pos->x == 2);
 	assert(movesList->move->dest->pos->y == 0);
 	assert(movesList->move->dest->next == NULL);
+
+	//init_board(board);
+	//MoveNode * list = getMoves(board, WHITE_M, WHITE_K, 'U');
+	//printf("done ut");
 }
 
 void unitTestsSettingFuncs()
