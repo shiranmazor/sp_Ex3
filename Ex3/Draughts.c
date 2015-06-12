@@ -364,6 +364,7 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 	MoveNode *lastNode = NULL;
 
 	int i, j;
+	int maxEats = -1;
 	for (i = 0; i < BOARD_SIZE; i++)
 	{
 		for (j = 0; j < BOARD_SIZE; j++)
@@ -381,27 +382,36 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 				}
 				else if (board[i][j] == userK)
 				{
-					//movesList = getKingMoves(pos);
+					movesList = getKingMoves(pos, userM, userK, board, direction);
 				}
 
 				MoveNode *moveNode = movesList;
 				while (moveNode)
 				{
-					if (firstMoveNode == NULL)
+					if (moveNode->move->eat > maxEats) //don't add if we can eat more in other move
 					{
-						firstMoveNode = moveNode;
-						lastNode = moveNode;
+						maxEats = moveNode->move->eat;
+						if (firstMoveNode == NULL)
+						{
+							firstMoveNode = moveNode;
+							lastNode = moveNode;
+						}
+						else
+						{
+							lastNode->next = moveNode;
+							lastNode = lastNode->next;
+						}
 					}
-					else
-					{
-						lastNode->next = moveNode;
-						lastNode = lastNode->next;
-					}
+
 					moveNode = moveNode->next;
 				}
 			}
 		}
 	}
+	
+	if (maxEats!=-1)
+		keepOnlyMaxEatNodes(firstMoveNode,maxEats);
+
 	return firstMoveNode;
 }
 
@@ -647,7 +657,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 	return movesList;
 }
 
-MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove)
+MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction)
 {
 	char curBoard[BOARD_SIZE][BOARD_SIZE];
 
@@ -1181,8 +1191,9 @@ void unitTests()
 	assert(movesList->move->dest->pos->y == 0);
 	assert(movesList->move->dest->next == NULL);
 
-	//init_board(board);
-	//MoveNode * list = getMoves(board, WHITE_M, WHITE_K, 'U');
+	init_board(board);
+	MoveNode * list = getMoves(board, WHITE_M, WHITE_K, 'U');
+	assert(list != NULL);
 	//printf("done ut");
 }
 
