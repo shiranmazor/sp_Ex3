@@ -19,31 +19,34 @@ int objectsInMemory = 0;
 Players game_players;
 
 void *myMalloc(size_t size) {
-	//printf("allocated memory!\n");
 	objectsInMemory++;
-	return malloc(size);
+	void * ptr = malloc(size);
+	assert(ptr != NULL);
+	return ptr;
 }
 
 void myFree(void  *memory) {
 	if (memory == NULL)
 		return;
 	objectsInMemory--;
-	//printf("freed memory!\n");
 	//printf("%p\n", memory);
 	free(memory);
 }
 
 void *myCalloc(void  *memory, size_t size) {
 	objectsInMemory++;
-	//printf("calloced memory!\n");
-	return calloc(memory, size);
+	void *ptr = calloc(memory, size);
+	assert(ptr != NULL);
+	return ptr;
 }
 
 void *myRealloc(void  *memory, size_t newSize) {
 	if (memory == NULL)
 		objectsInMemory++;
-	//printf("relloced memory!\n");
-	return realloc(memory, newSize);
+	
+	void *ptr = realloc(memory, newSize);
+	assert(ptr != NULL);
+	return ptr;
 }
 
 #define malloc(x) myMalloc(x)
@@ -97,6 +100,14 @@ void freeMove(Move *move)
 	free(move);
 }
 
+void freeMoveWithoutDest(MoveNode *moveNode)
+{
+	if (moveNode->move)
+		free(moveNode->move->currPos);
+	free(moveNode->move);
+	free(moveNode);
+}
+
 void freeMoves(MoveNode *moveNodeHead, Move* notDelete)
 {
 	while (moveNodeHead != NULL)
@@ -110,6 +121,7 @@ void freeMoves(MoveNode *moveNodeHead, Move* notDelete)
 		free(currNode);
 	}
 }
+
 void freeMoveNode(MoveNode *moveNode)
 {
 	if (moveNode != NULL)
@@ -388,22 +400,19 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 				MoveNode *moveNode = movesList;
 				while (moveNode)
 				{
+					MoveNode *toFree = NULL;
 					if (moveNode->move->eat >= maxEats) //don't add if we can eat more in other move
 					{
 						maxEats = moveNode->move->eat;
-						if (firstMoveNode == NULL)
-						{
-							firstMoveNode = moveNode;
-							lastNode = moveNode;
-						}
-						else
-						{
-							lastNode->next = moveNode;
-							lastNode = lastNode->next;
-						}
+						addMoveNodeToList(&firstMoveNode, &lastNode, moveNode);
 					}
-
+					else
+					{
+						toFree = moveNode;
+					}
+					
 					moveNode = moveNode->next;
+					free(toFree);
 				}
 			}
 		}
@@ -460,12 +469,10 @@ MoveNode *keepOnlyMaxEatNodes(MoveNode *movesList, int maxEats)
 		MoveNode *toFree = NULL;
 		if (moveNode->move->eat < maxEats)
 		{
+			toFree = moveNode;
 			if (moveNode == movesList) //firstElement
 			{
 				movesList = moveNode->next;
-				toFree = moveNode;
-				//moveNode = moveNode->next;
-				
 			}
 			else
 			{
@@ -510,20 +517,25 @@ void addMoveNodeToList(MoveNode **movesList, MoveNode **last, MoveNode * moveNod
 	else
 	{
 		(*(last))->next = moveNode;
-		last = (*(last))->next;
+		*(last) = (*(last))->next;
 	}
 }
+
+/*
+recives current position of the man, user tools identifier, board and moving direction. 
+Use onlyEatMove=1 if you want to prefer eat move only - can be useful after first eat.
+
+return linked list of possible moves for the specified man. Will return only moves with the maximum captures possible
+caller should free all returned linked list.
+*/
 MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove)
 {
 	char curBoard[BOARD_SIZE][BOARD_SIZE];
-
-
 	//copy board
 	for (int i = 0; i<10; i++)
 	{
 		memcpy(&curBoard[i], &board[i], sizeof(board[0]));
 	}
-
 
 	Pos** adj = malloc(4*sizeof(Pos*));
 	for (int a = 0; a < 4; a++)
@@ -539,20 +551,15 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 	for (int i = 0; i < 4; i++)
 	{
 		if (adj[i] != NULL)
-		{
-			/*if (capturedPos != NULL && capturedPos->x == adj[i]->x && capturedPos->y == adj[i]->y) //we've just eated this one, no need to go back
-				continue;*/
-			
+		{			
 			char adjVal = curBoard[adj[i]->x][adj[i]->y];
 			if (adjVal == userM || adjVal == userK) //can't eat, same team buddy!
 				continue;
-			
 
 			if (adjVal == EMPTY)
 			{
 				if (onlyEatMove) //we were requested to provide eat move only
 					continue;
-
 				if (direction == 'U' && i < 2) //moving in the wrong direction
 					continue;
 				if ((direction == 'D') && i > 1) //moving in the wrong direction
@@ -560,10 +567,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 
 				MoveNode *moveNode = createMoveNode(pos, *(adj[i]), 0);
 
-
 				addMoveNodeToList(&movesList, &last, moveNode);
-
-				//todo free all?
 			}
 			else if (adjVal != userM && adjVal != userK) //eating?
 			{
@@ -578,7 +582,6 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					continue;
 
 				//yay! we can eat at least one! maybe more?
-
 				Pos destPos;
 				destPos.x = adj[i]->x + xDiff;
 				destPos.y = adj[i]->y + yDiff;
@@ -595,7 +598,6 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				else //no king created
 					nextMovesList = getManMoves(destPos, userM, userK, curBoard, 'b', 1); //"both" since we now can eat backword
 				
-
 				if (!nextMovesList)
 				{
 					MoveNode *moveNode  = createMoveNode(pos, destPos, 1);
@@ -607,9 +609,11 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				MoveNode *moveNodeNew = nextMovesList;
 				while (moveNodeNew)
 				{
-					if (moveNodeNew->move->eat < maxEats)
+					if (moveNodeNew->move->eat < maxEats) //we have better moves buddy, bye!
 					{
+						MoveNode *toFree = moveNodeNew;
 						moveNodeNew = moveNodeNew->next;
+						free(toFree);
 						continue;
 					}
 					else
@@ -617,14 +621,13 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 						maxEats = 1 + moveNodeNew->move->eat;
 					}
 					MoveNode *moveNode = createMoveNode(pos, destPos, maxEats);
-
+					MoveNode *toFree = moveNodeNew;
 					moveNode->move->dest->next = moveNodeNew->move->dest;
 					moveNodeNew = moveNodeNew->next;
-					//free(moveNodeNew->move);
-					
+					//todo - copy to king
+					freeMoveWithoutDest(toFree);
 					addMoveNodeToList(&movesList, &last, moveNode);
 				}
-				//free(nextMovesList); //todo free nextMovesList		
 			}
 		}
 	}
@@ -638,28 +641,27 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 		free(adj);
 	}
 
-	//MoveNode *moveNode = movesList;
-	movesList= keepOnlyMaxEatNodes(movesList, maxEats);
-	
+	movesList= keepOnlyMaxEatNodes(movesList, maxEats);	
 	return movesList;
 }
 
+/*
+recives current position of the king, user tools identifier, board and moving direction.
+
+return linked list of possible moves for the specified king. Will return only moves with the maximum captures possible
+caller should free all returned linked list.
+*/
 MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction)
 {
 	char curBoard[BOARD_SIZE][BOARD_SIZE];
 
 	//copy board
 	for (int i = 0; i<10; i++)
-	{
 		memcpy(&curBoard[i], &board[i], sizeof(board[0]));
-	}
-
 
 	Pos** adj = malloc(4 * sizeof(Pos*));
 	for (int a = 0; a < 4; a++)
-	{
 		adj[a] = malloc(sizeof(Pos));
-	}
 
 	getAdjPositions(pos, adj);
 
@@ -669,7 +671,7 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 
 	for (int i = 0; i < 4; i++)
 	{
-		if (adj[i] != NULL)
+		if (adj[i] == NULL)
 			continue;
 
 		char adjVal = curBoard[adj[i]->x][adj[i]->y];
@@ -683,65 +685,60 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 
 			int xDiff = adj[i]->x - pos.x;
 			int yDiff = adj[i]->y - pos.y;
-			Pos *nextPosOnSameDirection;
-			nextPosOnSameDirection->x = adj[i]->x + xDiff;
-			nextPosOnSameDirection->y = adj[i]->y + yDiff;
+			Pos nextPosOnSameDirection;
+			nextPosOnSameDirection.x = adj[i]->x + xDiff;
+			nextPosOnSameDirection.y = adj[i]->y + yDiff;
 
-			if (!isValidPos(nextPosOnSameDirection)) //we reached end of board
+			if (!isValidPos(&nextPosOnSameDirection)) //we reached end of board
 				continue;
 
-			char nextToolOnTheSamePath = curBoard[nextPosOnSameDirection->x][nextPosOnSameDirection->y];
+			char nextToolOnTheSamePath = curBoard[nextPosOnSameDirection.x][nextPosOnSameDirection.y];
 			while (nextToolOnTheSamePath == EMPTY)
 			{
-				MoveNode *moveNode = createMoveNode(pos, *(nextPosOnSameDirection), 0);
+				MoveNode *moveNode = createMoveNode(pos, nextPosOnSameDirection, 0);
 				
 				addMoveNodeToList(&movesList, &last, moveNode);
 
-				//todo create move for each one of this empty positions
-				nextPosOnSameDirection->x += xDiff;
-				nextPosOnSameDirection->y += yDiff;
+				nextPosOnSameDirection.x += xDiff;
+				nextPosOnSameDirection.y += yDiff;
 				
-				if (!isValidPos(nextPosOnSameDirection))
+				if (!isValidPos(&nextPosOnSameDirection))
 					break;
 
-				nextToolOnTheSamePath = curBoard[nextPosOnSameDirection->x][nextPosOnSameDirection->y];
+				nextToolOnTheSamePath = curBoard[nextPosOnSameDirection.x][nextPosOnSameDirection.y];
 			}
 			
-			if (!isValidPos(nextPosOnSameDirection))
+			if (!isValidPos(&nextPosOnSameDirection))
 				continue;
 
-			if (nextPosOnSameDirection == userK || nextPosOnSameDirection == userM) //can't move further, we reached the same color
+			if (board[nextPosOnSameDirection.x][nextPosOnSameDirection.y] == userK || board[nextPosOnSameDirection.x][nextPosOnSameDirection.y] == userM) //can't move further, we reached the same color
 				continue;
 
 			//if you reached here maybe you have something to eat!!
-			Pos *mustBeEmptyInOrderToEat;
-			mustBeEmptyInOrderToEat->x = nextPosOnSameDirection->x + xDiff;
-			mustBeEmptyInOrderToEat->y = nextPosOnSameDirection->y += yDiff;
+			Pos mustBeEmptyInOrderToEat;
+			mustBeEmptyInOrderToEat.x = nextPosOnSameDirection.x + xDiff;
+			mustBeEmptyInOrderToEat.y = nextPosOnSameDirection.y + yDiff;
 
-			if (!isValidPos(mustBeEmptyInOrderToEat)) //blocked
+			if (!isValidPos(&mustBeEmptyInOrderToEat)) //blocked
 				continue;
 
-			if (curBoard[mustBeEmptyInOrderToEat->x][mustBeEmptyInOrderToEat->y] != EMPTY) //can't eat, two tools in a row
+			if (curBoard[mustBeEmptyInOrderToEat.x][mustBeEmptyInOrderToEat.y] != EMPTY) //can't eat, two tools in a row
 				continue;
 
 			//now we can eat!@#!
 			if (maxEats < 1)
 				maxEats = 1;
 
-			curBoard[adj[i]->x][adj[i]->y] = EMPTY;
+			curBoard[nextPosOnSameDirection.x][nextPosOnSameDirection.y] = EMPTY;
 
 			//maybe we can eat more!
-			nextMovesList = getManMoves(*(mustBeEmptyInOrderToEat), userM, userK, curBoard, 'b', 1); //"both" since we now can eat backword
+			nextMovesList = getManMoves(mustBeEmptyInOrderToEat, userM, userK, curBoard, 'b', 1); //"both" since we now can eat backword
 			
 			if (!nextMovesList) //can't eat more
 			{
-				//addMoveNodeToList(MoveNode* moveNode, Pos currPos, Pos destPos, int eat, MoveNode* last)
-				MoveNode *moveNode = createMoveNode(pos, *(mustBeEmptyInOrderToEat), 1);
-
+				MoveNode *moveNode = createMoveNode(pos, mustBeEmptyInOrderToEat, 1);
 				addMoveNodeToList(&movesList, &last, moveNode);
-
 				continue;
-				//todo free something?
 			}
 
 			//maybe we ate more!
@@ -750,18 +747,19 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 			{
 				if (moveNodeNew->move->eat < maxEats)
 				{
+					MoveNode *toFree = moveNodeNew;
 					moveNodeNew = moveNodeNew->next;
+					free(toFree);
 					continue;
 				}
 				else
 				{
 					maxEats = 1 + moveNodeNew->move->eat;
 				}
-				MoveNode *moveNode = createMoveNode(pos, *(mustBeEmptyInOrderToEat), maxEats);
+				MoveNode *moveNode = createMoveNode(pos, mustBeEmptyInOrderToEat, maxEats);
 
 				moveNode->move->dest->next = moveNodeNew->move->dest;
 				moveNodeNew = moveNodeNew->next;
-				//free(moveNodeNew->move);
 
 				addMoveNodeToList(&movesList, &last, moveNode);
 			}
@@ -1011,7 +1009,7 @@ void unitTests()
 	assert(movesList->move->dest->pos->x == 1);
 	assert(movesList->move->dest->pos->y == 1);
 	assert(movesList->move->eat == 0);
-	//todo free movesList 
+	freeMoves(movesList, NULL);
 	
 	//eating one:
 	board[1][1] = BLACK_K;
@@ -1024,7 +1022,7 @@ void unitTests()
 	assert(movesList->move->eat == 1);
 	assert(movesList->move->dest->pos->x == 2);
 	assert(movesList->move->dest->pos->y == 2);
-	
+	freeMoves(movesList, NULL);
 
 	//eating two on the same path:
 	board[1][1] = BLACK_M;
@@ -1039,7 +1037,7 @@ void unitTests()
 	assert(movesList->move->dest->next->pos->x == 4);
 	assert(movesList->move->dest->next->pos->y == 4);
 	assert(movesList->move->dest->next->next == NULL);
-
+	freeMoves(movesList, NULL);
 	//eating farward than backward:
 	board[3][3] = EMPTY;
 	board[3][1] = BLACK_M;
@@ -1054,6 +1052,7 @@ void unitTests()
 	assert(movesList->move->dest->next->pos->x == 4);
 	assert(movesList->move->dest->next->pos->y == 0);
 	assert(movesList->move->dest->next->next == NULL);
+	freeMoves(movesList, NULL);
 
 	pos.x = 2;
 	pos.y = 2;
@@ -1075,6 +1074,7 @@ void unitTests()
 	assert(movesList->next->move->dest->pos->y == 4);
 	
 	assert(movesList->move->dest->next == NULL);
+	freeMoves(movesList, NULL);
 
 	//one eat with one option to not eat
 	board[3][3] = WHITE_M;
@@ -1086,6 +1086,7 @@ void unitTests()
 	assert(movesList->move->dest->pos->x == 0);
 	assert(movesList->move->dest->pos->y == 4);
 	assert(movesList->move->dest->next == NULL);
+	freeMoves(movesList, NULL);
 
 	//todo - try to eat down
 	pos.x = 1;
@@ -1102,6 +1103,7 @@ void unitTests()
 	assert(movesList->move->dest->pos->x == 3);
 	assert(movesList->move->dest->pos->y == 1);
 	assert(movesList->move->dest->next == NULL);
+	freeMoves(movesList, NULL);
 
 	//After a man becomes a king, it cannot move or capture in the same turn:
 	pos.x = 3;
@@ -1118,6 +1120,7 @@ void unitTests()
 	assert(movesList->move->dest->pos->x == 5);
 	assert(movesList->move->dest->pos->y == 9);
 	assert(movesList->move->dest->next == NULL);
+	freeMoves(movesList, NULL);
 
 	//same but now with the black
 	pos.x = 0;
@@ -1134,9 +1137,8 @@ void unitTests()
 	assert(movesList->move->dest->pos->x ==2);
 	assert(movesList->move->dest->pos->y == 0);
 	assert(movesList->move->dest->next == NULL);
+	freeMoves(movesList, NULL);
 
-
-	
 	//eatin backward:
 	clear_board(board);
 	board[1][1] = BLACK_M;
@@ -1150,6 +1152,7 @@ void unitTests()
 	assert(movesList->move->dest->pos->x == 2);
 	assert(movesList->move->dest->pos->y == 0);
 	assert(movesList->move->dest->next == NULL);
+	freeMoves(movesList, NULL);
 
 	init_board(board);
 	
@@ -1169,7 +1172,22 @@ void unitTests()
 		node = node->next;
 	}
 	assert(movesCount == 9);
-	//printf("done ut");
+	freeMoves(list, NULL);
+
+	clear_board(board);
+	board[0][0] = WHITE_K;
+	board[7][7] = BLACK_K;
+
+	
+	pos.y = pos.x = 0;
+
+	movesList = getKingMoves(pos, WHITE_M, WHITE_K, board, 'U');
+	assert(movesList != NULL);
+	assert(movesList->next == NULL);
+	assert(movesList->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 8);
+	assert(movesList->move->dest->pos->y == 8);
+	freeMoves(movesList, NULL);
 }
 
 void unitTestsSettingFuncs()
@@ -2857,10 +2875,10 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 int main()
 {
 	unitTests();
-	unitTestsSettingFuncs();
+	/*unitTestsSettingFuncs();
 	unitTestValidMoves();
 	unitTestCheckStuckAndScore();
-	unitTestMinimaxAndMoves();
+	unitTestMinimaxAndMoves();*/
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
 
