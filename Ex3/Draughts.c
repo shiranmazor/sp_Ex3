@@ -2875,10 +2875,10 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 int main()
 {
 	unitTests();
-	/*unitTestsSettingFuncs();
+	unitTestsSettingFuncs();
 	unitTestValidMoves();
 	unitTestCheckStuckAndScore();
-	unitTestMinimaxAndMoves();*/
+	unitTestMinimaxAndMoves();
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
 
