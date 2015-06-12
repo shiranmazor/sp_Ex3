@@ -193,10 +193,6 @@ char* getString(FILE* fp, size_t size)
 }
 
 
-
-
-
-
 char* replace(char *s, char ch, char *repl) 
 {
 	int count = 0;
@@ -365,7 +361,6 @@ void print_line(){
 	}
 	printf("|\n");
 }
-
 
 
 MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char direction)
@@ -979,13 +974,9 @@ Move * parseMoveCommand(char *command)
 
 void set_disc(char* pos_input, char* color, char* type)
 {
-	//char **arr = NULL;
 	Pos *pos = formatPos(pos_input);
-	//char x = arr[0][0];
-	//int y = atoi(arr[1]);
 	if (pos == NULL)
 	{
-		//printf("%s", WRONG_POSITION);
 		return;
 	}
 	else
@@ -1191,6 +1182,299 @@ void unitTests()
 	assert(movesList->move->dest->next == NULL);
 }
 
+void unitTestsSettingFuncs()
+{
+	clear_board();
+	//first check all functions of setting state:
+	//set_disc:
+	char* pos = "<d,1>";
+	char* color = "white";
+	char* type = "k";
+	set_disc(pos, color, type);
+	assert(board[3][0] == EMPTY);
+
+	clear_board();
+	pos = "<b,8>";
+	color = "black";
+	type = "m";
+	set_disc(pos, color, type);
+	assert(board[1][7] == BLACK_M);
+
+	clear_board();
+	pos = "<i,3>";
+	color = "stam";
+	type = "m";
+	set_disc(pos, color, type);
+	assert(board[8][2] == EMPTY);
+
+	clear_board();
+	pos = "<g,6>";
+	color = "white";
+	type = "m";
+	set_disc(pos, color, type);
+	assert(board[6][5] == EMPTY);
+
+	clear_board();
+	pos = "<f,10>";
+	color = "white";
+	type = "M";
+	set_disc(pos, color, type);
+	assert(board[5][9] == EMPTY);
+
+	clear_board();
+	pos = "<d,4>";
+	color = "white";
+	type = "m";
+	set_disc(pos, color, type);
+	assert(board[3][3] == WHITE_M);
+	pos = "<d,4>";
+	color = "black";
+	type = "k";
+	set_disc(pos, color, type);
+	assert(board[3][3] == BLACK_K);
+	
+	clear_board();
+	//remove disc:
+	set_disc("<e,5>", "white", "k");
+	remove_disc("<e,5");
+	assert(board[4][4] == EMPTY);
+
+
+	clear_board();
+}
+
+void unitTestValidMoves()
+{
+	//init game players f:
+	//computer = black player:
+	computer_color = BLACK;
+	game_players.computer_direction = 'D';
+	game_players.computer_m = BLACK_M;
+	game_players.computer_k = BLACK_K;
+	game_players.user_k = WHITE_K;
+	game_players.user_m = WHITE_M;
+	game_players.user_direction = 'U';
+	//int checkMoveIsValidMan( Move move, char direction)
+	clear_board();
+	set_disc("<f,2>", "white", "m");
+	set_disc("<g,3>", "black", "k");
+	set_disc("<g,5>", "black", "m");
+	set_disc("<e,5>", "black", "m");
+	char cmd[] = "move <f,2> to <h,4><f,6><d,4>";
+	trimwhitespace(cmd);
+	Move *res = parseMoveCommand(cmd);
+	int output = checkMoveIsValidMan(*res, 'U');
+	assert(output == 1);
+	freeMove(res);
+	clear_board();
+
+
+	//computer = white player:
+	computer_color = WHITE;
+	game_players.user_direction = 'D';
+	game_players.user_m = BLACK_M;
+	game_players.user_k = BLACK_K;
+	game_players.computer_k = WHITE_K;
+	game_players.computer_m = WHITE_M;
+	game_players.computer_direction = 'U';
+	set_disc("<e,7>", "black", "m");
+	set_disc("<d,6>", "white", "m");
+	char cmd2[] = "move <e,7> to <c,5>";
+	trimwhitespace(cmd2);
+	res = parseMoveCommand(cmd2);
+	output = checkMoveIsValidMan(*res, 'D');
+	assert(output == 1);
+	freeMove(res);
+
+	clear_board();
+	set_disc("<e,7>", "black", "m");
+	char cmd3[] = "move <e,7> to <c,5>";
+	trimwhitespace(cmd3);
+	res = parseMoveCommand(cmd3);
+	output = checkMoveIsValidMan(*res, 'D');
+	assert(output == 0);
+	freeMove(res);
+
+	char cmd4[] = "move <g,3> to <c,5>";
+	trimwhitespace(cmd4);
+	res = parseMoveCommand(cmd4);
+	output = checkMoveIsValidMan(*res, 'D');
+	assert(output == 0);
+	freeMove(res);
+	clear_board();
+
+	//int checkMoveIsValidKing(Move move, char direction)
+	//computer = black player:
+	computer_color = BLACK;
+	game_players.computer_direction = 'D';
+	game_players.computer_m = BLACK_M;
+	game_players.computer_k = BLACK_K;
+	game_players.user_k = WHITE_K;
+	game_players.user_m = WHITE_M;
+	game_players.user_direction = 'U';
+	set_disc("<d,2>", "white", "k");
+	char cmd5[] = "move <d,2> to <j,8>";
+	trimwhitespace(cmd5);
+	res = parseMoveCommand(cmd5);
+	output = checkMoveIsValidKing(*res, 'U');
+	assert(output == 1);
+	freeMove(res);
+	clear_board();
+
+	set_disc("<d,2>", "white", "k");
+	set_disc("<f,4>", "black", "m");
+	char cmd6[] = "move <d,2> to <g,5>";
+	trimwhitespace(cmd6);
+	res = parseMoveCommand(cmd6);
+	output = checkMoveIsValidKing(*res, 'U');
+	assert(output == 1);
+	freeMove(res);
+	clear_board();
+
+	set_disc("<d,2>", "white", "k");
+	set_disc("<f,4>", "black", "m");
+	set_disc("<g,5>", "black", "m");
+	char cmd7[] = "move <d,2> to <h,6>";
+	trimwhitespace(cmd7);
+	res = parseMoveCommand(cmd7);
+	output = checkMoveIsValidKing(*res, 'U');
+	assert(output == 0);
+	freeMove(res);
+
+
+	//computer = white player:
+	computer_color = WHITE;
+	game_players.user_direction = 'D';
+	game_players.user_m = BLACK_M;
+	game_players.user_k = BLACK_K;
+	game_players.computer_k = WHITE_K;
+	game_players.computer_m = WHITE_M;
+	game_players.computer_direction = 'U';
+	set_disc("<b,8>", "black", "k");
+	set_disc("<d,6>", "white", "m");
+	set_disc("<g,3>", "white", "m");
+	char cmd8[] = "move <b,8> to <e,5><h,2>";
+	trimwhitespace(cmd8);
+	res = parseMoveCommand(cmd8);
+	output = checkMoveIsValidKing(*res, 'D');
+	assert(output == 0);
+	freeMove(res);
+	clear_board();
+
+	//isManBecomeKing:
+	//computer = black player:
+	computer_color = BLACK;
+	game_players.computer_direction = 'D';
+	game_players.computer_m = BLACK_M;
+	game_players.computer_k = BLACK_K;
+	game_players.user_k = WHITE_K;
+	game_players.user_m = WHITE_M;
+	game_players.user_direction = 'U';
+	Pos* next = formatPos("<d,10>");
+	int result = isManBecomeKing(next, 'U');
+	assert(result == 1);
+	free(next);
+
+	next = formatPos("<c,3>");
+	result = isManBecomeKing(next, 'U');
+	assert(result == 0);
+	free(next);
+
+	//computer = white player:
+	computer_color = WHITE;
+	game_players.user_direction = 'D';
+	game_players.user_m = BLACK_M;
+	game_players.user_k = BLACK_K;
+	game_players.computer_k = WHITE_K;
+	game_players.computer_m = WHITE_M;
+	game_players.computer_direction = 'U';
+	next = formatPos("<e,1>");
+	result = isManBecomeKing(next, 'D');
+	assert(result == 1);
+	free(next);
+
+	//getOponnentPos
+	clear_board();
+	set_disc("<e,3>", "white", "m");
+	set_disc("<f,4>", "black", "m");
+	Pos* curr = formatPos("<e,3>");
+	Pos* nextP = formatPos("<g,5>");
+	Pos p = getOponnentPos(curr, nextP);
+	free(curr);
+	free(nextP);
+	assert(p.x == 5 && p.y == 3);
+
+	clear_board();
+	set_disc("<c,9>", "black", "m");
+	set_disc("<b,8>", "white", "m");
+	curr = formatPos("<c,9>");
+	nextP = formatPos("<a,7>");
+	p = getOponnentPos(curr, nextP);
+	free(curr);
+	free(nextP);
+	assert(p.x == 1 && p.y == 7);
+
+
+}
+
+void unitTestCheckStuckAndSCore()
+{
+	//checkClosedMovesMan
+	clear_board();
+	set_disc("<f,2>", "white", "m");
+	set_disc("<e,3>", "white", "k");
+	int res1 = checkClosedMovesMan(5, 1, WHITE_M, BLACK_M, BLACK_K, 'U', 0);
+	assert(res1 == 1);
+
+	clear_board();
+	set_disc("<f,2>", "white", "m");
+	set_disc("<e,3>", "white", "k");
+	set_disc("<g,3>", "black", "m");
+	res1 = checkClosedMovesMan(5, 1, WHITE_M, BLACK_M, BLACK_K, 'U', 0);
+	assert(res1 == 1);
+
+	clear_board();
+	set_disc("<f,2>", "white", "m");
+	set_disc("<e,3>", "white", "k");
+	set_disc("<g,3>", "white", "m");
+	res1 = checkClosedMovesMan(5, 1, WHITE_M, BLACK_M, BLACK_K, 'U', 0);
+	assert(res1 == 0);
+
+	clear_board();
+	set_disc("<j,8>", "black", "m");
+	set_disc("<i,7>", "black", "m");
+	set_disc("<i,9>", "white", "m");
+	res1 = checkClosedMovesMan(9, 7, BLACK_M, WHITE_M, WHITE_K, 'D', 0);
+	assert(res1 == 1);
+
+	//checkClosedMovesKing:
+	clear_board();
+	set_disc("<f,10>", "black", "k");
+	set_disc("<e,9>", "black", "m");
+	set_disc("<d,8>", "black", "m");
+	set_disc("<g,9>", "white", "m");
+	set_disc("<h,8>", "white", "m");
+	print_board(board);
+	int res2 = checkClosedMovesKing(5, 9, BLACK_M,BLACK_K, WHITE_M,WHITE_K, 'D',1);
+	assert(res2 == 0);
+
+	clear_board();
+	set_disc("<f,10>", "black", "k");
+	set_disc("<e,9>", "black", "m");
+	set_disc("<d,8>", "black", "m");
+	set_disc("<g,9>", "white", "m");
+	print_board(board);
+	res2 = checkClosedMovesKing(5, 9, BLACK_M, BLACK_K, WHITE_M, WHITE_K, 'D', 1);
+	assert(res2 == 1);
+
+	//isPlayerStuck:
+
+}
+
+void unitTestMinimaxAndMoves()
+{
+
+}
 
 int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 {
@@ -1314,6 +1598,7 @@ int isPlayerStuck(char player_man, char player_king, char opponent_man, char opp
 
 }
 
+/*return 1 if man still have moves else return 0*/
 int checkClosedMovesMan(int i, int j, char player, char opponentM, char opponentK, char direction, int king)
 {
 	int hasMove = 0;
@@ -1405,142 +1690,134 @@ int checkClosedMovesMan(int i, int j, char player, char opponentM, char opponent
 
 }
 
+/*return 1 if king still have moves else return 0*/
 int checkClosedMovesKing(int i, int j, char playerM, char playerK, char opponentM, char opponentK, char direction, int king)
 {
-	int hasMoves = 1;
+	int hasMoves = 0;
 	if (i == 0 && j == 0)//left bottom
 	{
-		if (board[i + 1][j + 1] == playerK || board[i + 1][j + 1] == playerM)
-			hasMoves = 0;
+		if (board[i + 1][j + 1] == EMPTY )
+			hasMoves = 1;
 		else if (board[i + 1][j + 1] == opponentK || board[i + 1][j + 1] == opponentM)
 		{
-			//check if can't it
-			if (board[i + 2][j + 2] != EMPTY)
-				hasMoves = 0;
+			//check if can eat
+			if (board[i + 2][j + 2] == EMPTY)
+				hasMoves = 1;
 		}
 
 	}
 	else if (i == 9 && j == 9)
 	{
-		if (board[i - 1][j - 1] == playerK || board[i - 1][j - 1] == playerM)
-			hasMoves = 0;
+		if (board[i - 1][j - 1] == EMPTY)
+			hasMoves = 1;
 		else if (board[i -1][j - 1] == opponentK || board[i - 1][j - 1] == opponentM)
 		{
-			//check if can't it
-			if (board[i - 2][j - 2] != EMPTY)
-				hasMoves = 0;
+			//check if can eat
+			if (board[i - 2][j - 2] == EMPTY)
+				hasMoves = 1;
 		}
 	}
-	else if (j = 0)//only first line
+	else if (j == 0)//only first line
 	{
-		if (board[i - 1][j + 1] == playerK || board[i - 1][j + 1] == playerM)
-			hasMoves = 0;
+		if (board[i - 1][j + 1] == EMPTY || board[i + 1][j + 1] == EMPTY)
+			hasMoves = 1;
 		else if (board[i - 1][j + 1] == opponentK || board[i - 1][j + 1] == opponentM)
 		{
-			//check if can't eat
-			if (board[i - 2][j + 2] != EMPTY)
-				hasMoves = 0;
+			// check if can eat
+			if (board[i - 2][j + 2] == EMPTY)
+				hasMoves = 1;
 		}
-		else if (board[i + 1][j + 1] == playerK || board[i + 1][j + 1] == playerM)
-			hasMoves = 0;
 		else if (board[i + 1][j + 1] == opponentK || board[i + 1][j + 1] == opponentM)
 		{
-			// check if can't eat
-			if (board[i + 2][j + 2] != EMPTY)
-				hasMoves = 0;
+			// check if can eat
+			if (board[i + 2][j + 2] == EMPTY)
+				hasMoves = 1;
 		}
+
 	}
 	else if (j == 9)//only last line
 	{
-		if (board[i - 1][j - 1] == playerK || board[i - 1][j - 1] == playerM)
-			hasMoves = 0;
+		if (board[i - 1][j - 1] == EMPTY || board[i + 1][j - 1] == EMPTY)
+			hasMoves = 1;
 		else if (board[i - 1][j - 1] == opponentK || board[i - 1][j - 1] == opponentM)
 		{
 			//check if can't eat
-			if (board[i - 2][j - 2] != EMPTY)
-				hasMoves = 0;
+			if (board[i - 2][j - 2] == EMPTY)
+				hasMoves = 1;
 		}
-		else if (board[i + 1][j - 1] == playerK || board[i + 1][j - 1] == playerM)
-			hasMoves = 0;
-		else if (board[i + 1][j - 1] == opponentK || board[i + 1][j - 1] == opponentM)
-		{
-			// check if can't eat
-			if (board[i + 2][j - 2] != EMPTY)
-				hasMoves = 0;
-		}
-	}
-	else if (i = 0)//only first colunm
-	{
-		if (board[i + 1][j - 1] == playerK || board[i + 1][j - 1] == playerM)
-			hasMoves = 0;
 		else if (board[i + 1][j - 1] == opponentK || board[i + 1][j - 1] == opponentM)
 		{
 			//check if can't eat
-			if (board[i + 2][j - 2] != EMPTY)
-				hasMoves = 0;
+			if (board[i + 2][j - 2] == EMPTY)
+				hasMoves = 1;
 		}
-		else if (board[i + 1][j + 1] == playerK || board[i + 1][j + 1] == playerM)
-			hasMoves = 0;
+	}
+	else if (i == 0)//only first colunm
+	{
+		if (board[i + 1][j - 1] == EMPTY || board[i + 1][j + 1] == EMPTY)
+			hasMoves = 1;
+		else if (board[i + 1][j - 1] == opponentK || board[i + 1][j - 1] == opponentM)
+		{
+			//check if can eat
+			if (board[i + 2][j - 2] == EMPTY)
+				hasMoves = 1;
+			
+		}
 		else if (board[i + 1][j + 1] == opponentK || board[i + 1][j + 1] == opponentM)
 		{
-			// check if can't eat
-			if (board[i + 2][j + 2] != EMPTY)
-				hasMoves = 0;
+			if (board[i + 2][j + 2] == EMPTY)
+				hasMoves = 1;
 		}
 	}
 	else if (i == 9)//only last column
 	{
-		if (board[i - 1][j - 1] == playerK || board[i - 1][j - 1] == playerM)
-			hasMoves = 0;
+		if (board[i - 1][j - 1] == EMPTY || board[i - 1][j + 1] == EMPTY)
+			hasMoves = 1;
 		else if (board[i - 1][j - 1] == opponentK || board[i - 1][j - 1] == opponentM)
 		{
-			//check if can't eat
-			if (board[i - 2][j - 2] != EMPTY)
-				hasMoves = 0;
+			//check if can eat
+			if (board[i - 2][j - 2] == EMPTY)
+				hasMoves = 1;
+			
 		}
-		else if (board[i - 1][j + 1] == playerK || board[i - 1][j +1] == playerM)
-			hasMoves = 0;
 		else if (board[i - 1][j + 1] == opponentK || board[i - 1][j + 1] == opponentM)
 		{
-			// check if can't eat
-			if (board[i - 2][j + 2] != EMPTY)
-				hasMoves = 0;
+			if (board[i - 2][j + 2] == EMPTY)
+				hasMoves = 1;
 		}
 	}
 	else// in the middle
 	{
-		if (board[i - 1][j - 1] == playerK || board[i - 1][j - 1] == playerM)
-			hasMoves = 0;
+		if (board[i - 1][j - 1] == EMPTY || board[i + 1][j - 1] == EMPTY)
+			hasMoves = 1;
 		else if (board[i - 1][j - 1] == opponentK || board[i - 1][j - 1] == opponentM)
 		{
 			//check if can't eat
-			if (board[i - 2][j - 2] != EMPTY)
-				hasMoves = 0;
+			if (board[i - 2][j - 2] == EMPTY)
+				hasMoves = 1;
 		}
-		else if (board[i - 1][j + 1] == playerK || board[i - 1][j + 1] == playerM)
-			hasMoves = 0;
-		else if (board[i - 1][j + 1] == opponentK || board[i - 1][j + 1] == opponentM)
-		{
-			// check if can't eat
-			if (board[i - 2][j + 2] != EMPTY)
-				hasMoves = 0;
-		}
-		if (board[i + 1][j - 1] == playerK || board[i + 1][j - 1] == playerM)
-			hasMoves = 0;
 		else if (board[i + 1][j - 1] == opponentK || board[i + 1][j - 1] == opponentM)
 		{
 			//check if can't eat
-			if (board[i + 2][j - 2] != EMPTY)
-				hasMoves = 0;
+			if (board[i + 2][j - 2] == EMPTY)
+				hasMoves = 1;
 		}
-		else if (board[i + 1][j + 1] == playerK || board[i + 1][j + 1] == playerM)
-			hasMoves = 0;
+		else if (board[i - 1][j + 1] == EMPTY || board[i + 1][j + 1] == EMPTY)
+			hasMoves = 1;
+		else if (board[i - 1][j + 1] == opponentK || board[i - 1][j + 1] == opponentM)
+		{
+			// check if can eat
+			if (board[i - 2][j + 2] == EMPTY)
+				hasMoves = 1;
+		}
 		else if (board[i + 1][j + 1] == opponentK || board[i + 1][j + 1] == opponentM)
 		{
-			// check if can't eat
-			if (board[i + 2][j + 2] != EMPTY)
-				hasMoves = 0;
+			// check if can eat
+			if (board[i + 2][j + 2] == EMPTY)
+				hasMoves = 1;
 		}
+
+		
 	}
 
 	return hasMoves;
@@ -1877,7 +2154,7 @@ int checkMoveIsValidMan( Move move, char direction)
 
 		return valid;
 	}
-	
+	return valid;
 }
 
 int isManBecomeKing(Pos* next, char direction)
@@ -2461,6 +2738,9 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 int main()
 {
 	unitTests();
+	unitTestsSettingFuncs();
+	unitTestValidMoves();
+	unitTestCheckStuckAndSCore();
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
 
