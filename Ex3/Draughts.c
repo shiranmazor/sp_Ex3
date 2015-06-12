@@ -388,7 +388,7 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 				MoveNode *moveNode = movesList;
 				while (moveNode)
 				{
-					if (moveNode->move->eat > maxEats) //don't add if we can eat more in other move
+					if (moveNode->move->eat >= maxEats) //don't add if we can eat more in other move
 					{
 						maxEats = moveNode->move->eat;
 						if (firstMoveNode == NULL)
