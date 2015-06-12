@@ -1417,7 +1417,7 @@ void unitTestValidMoves()
 
 }
 
-void unitTestCheckStuckAndSCore()
+void unitTestCheckStuckAndScore()
 {
 	//checkClosedMovesMan
 	clear_board();
@@ -1454,7 +1454,6 @@ void unitTestCheckStuckAndSCore()
 	set_disc("<d,8>", "black", "m");
 	set_disc("<g,9>", "white", "m");
 	set_disc("<h,8>", "white", "m");
-	print_board(board);
 	int res2 = checkClosedMovesKing(5, 9, BLACK_M,BLACK_K, WHITE_M,WHITE_K, 'D',1);
 	assert(res2 == 0);
 
@@ -1463,11 +1462,82 @@ void unitTestCheckStuckAndSCore()
 	set_disc("<e,9>", "black", "m");
 	set_disc("<d,8>", "black", "m");
 	set_disc("<g,9>", "white", "m");
-	print_board(board);
 	res2 = checkClosedMovesKing(5, 9, BLACK_M, BLACK_K, WHITE_M, WHITE_K, 'D', 1);
 	assert(res2 == 1);
 
 	//isPlayerStuck:
+	clear_board();
+	set_disc("<f,4>", "white", "m");
+	set_disc("<e,3>", "black", "m");
+	set_disc("<g,3>", "black", "m");
+	set_disc("<e,5>", "black", "m");
+	set_disc("<g,5>", "black", "m");
+	set_disc("<h,2>", "black", "m");
+	set_disc("<d,2>", "black", "m");
+	set_disc("<h,6>", "black", "k");
+	set_disc("<d,6>", "black", "k");
+	int res3 = isPlayerStuck(WHITE_M, WHITE_K, BLACK_M, BLACK_K, 'U');
+	assert(res3 == 0);
+
+	clear_board();
+	set_disc("<f,4>", "white", "m");
+	set_disc("<e,3>", "white", "m");
+	set_disc("<e,5>", "white", "m");
+	set_disc("<g,5>", "white", "m");
+	set_disc("<g,3>", "black", "m");
+	res3 = isPlayerStuck(WHITE_M, WHITE_K, BLACK_M, BLACK_K, 'U');
+	assert(res3 == 1);
+	res3 = isPlayerStuck(BLACK_M, BLACK_K, WHITE_M, WHITE_K, 'D');
+	assert(res3 == 1);
+
+	set_disc("<f,10>", "white", "k");
+	res3 = isPlayerStuck(WHITE_M,WHITE_K, BLACK_M,BLACK_K, 'U');
+	assert(res3 == 1);
+
+	clear_board();
+	set_disc("<c,1>", "black", "k");
+	res3 = isPlayerStuck(BLACK_M, BLACK_K, WHITE_M, WHITE_K, 'D');
+	assert(res3 == 1);
+
+	//score:
+	clear_board();
+	init_board(board);
+	int s = score(board, WHITE);
+	assert(s == 0);
+	
+	//still on init board:
+	remove_disc("<c,7>");
+	remove_disc("<e,9>");
+	remove_disc("<j,10>");
+	s = score(board, WHITE);
+	assert(s == 3);
+
+	clear_board();
+	set_disc("<d,6>", "black", "k");
+	set_disc("<b,2>", "white", "m");
+	s = score(board, WHITE);
+	assert(s == -2);
+
+	clear_board();
+	computer_color = WHITE;
+	game_players.computer_direction = 'U';
+	game_players.computer_k = WHITE_K;
+	game_players.computer_m = WHITE_M;
+	game_players.user_direction = 'U';
+	game_players.user_k = BLACK_K;
+	game_players.user_m = BLACK_M;
+
+	set_disc("<d,6>", "black", "k");
+	set_disc("<h,8>", "black", "k");
+	set_disc("<b,2>", "white", "m");
+	set_disc("<f,4>", "white", "m");
+	set_disc("<e,3>", "white", "m");
+	print_board(board);
+	s = score(board, BLACK);
+	assert(s == 3);
+
+
+	clear_board();
 
 }
 
@@ -1491,6 +1561,7 @@ int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 			score == 100;
 		else
 		{
+			//player is the computer
 			int player_counter = 0;
 			int opponent_counter = 0;
 			int i, j;
@@ -1508,7 +1579,7 @@ int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 						if (board[i][j] == game_players.user_m)
 							opponent_counter++;
 						if (board[i][j] == game_players.user_k)
-							opponent_counter = player_counter + 3;
+							opponent_counter = opponent_counter + 3;
 					}
 				}
 			}
@@ -1532,6 +1603,7 @@ int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 			score = 100;
 		else
 		{
+			//player is the user
 			int player_counter = 0;
 			int opponent_counter = 0;
 			int i, j;
@@ -1541,13 +1613,13 @@ int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 				{
 					if ((i + j) % 2 == 0)
 					{
-						if (board[i][j] == game_players.computer_m)
-							player_counter++;
-						if (board[i][j] == game_players.computer_k)
-							player_counter = player_counter + 3;
 						if (board[i][j] == game_players.user_m)
-							opponent_counter++;
+							player_counter++;
 						if (board[i][j] == game_players.user_k)
+							player_counter = player_counter + 3;
+						if (board[i][j] == game_players.computer_m)
+							opponent_counter++;
+						if (board[i][j] == game_players.computer_k)
 							opponent_counter = player_counter + 3;
 					}
 				}
@@ -1567,6 +1639,7 @@ int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 
 }
 
+/*return 0 if player stuck else return 1*/
 int isPlayerStuck(char player_man, char player_king, char opponent_man, char opponent_king, char direction)
 {
 
@@ -2740,7 +2813,7 @@ int main()
 	unitTests();
 	unitTestsSettingFuncs();
 	unitTestValidMoves();
-	unitTestCheckStuckAndSCore();
+	unitTestCheckStuckAndScore();
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
 
