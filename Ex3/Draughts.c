@@ -756,10 +756,14 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 				{
 					maxEats = 1 + moveNodeNew->move->eat;
 				}
+
 				MoveNode *moveNode = createMoveNode(pos, mustBeEmptyInOrderToEat, maxEats);
+				MoveNode *toFree = moveNodeNew;
 
 				moveNode->move->dest->next = moveNodeNew->move->dest;
 				moveNodeNew = moveNodeNew->next;
+
+				freeMoveWithoutDest(toFree);
 
 				addMoveNodeToList(&movesList, &last, moveNode);
 			}
