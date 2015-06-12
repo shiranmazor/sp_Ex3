@@ -2,6 +2,11 @@
 #define DRAUGHTS_
 
 #include<stdio.h>
+#include <string.h>
+#include <assert.h>
+#include <ctype.h>
+#include <math.h>
+#include <stdlib.h>
 
 
 #define WHITE_M 'm'
@@ -72,6 +77,8 @@ Pos getOponnentPos(Pos* curr, Pos* next);
 int isManBecomeKing(Pos* next, char direction);
 int minimax(char board[BOARD_SIZE][BOARD_SIZE], int depth, int isMaxplayer, Move* bestMove);
 void freeMoves(MoveNode *moveNodeHead, Move* notDelete);
+char* getStringFormatMove(Move move);
+char* getStringFormatPos(Pos* pos);
 
 MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char direction);
 MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove);

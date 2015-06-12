@@ -1,10 +1,5 @@
 #include "Draughts.h"
-#include <string.h>
-#include <assert.h>
-#include <ctype.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+
 
 //globals:
 struct Players
@@ -380,11 +375,11 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 				pos.y = j;
 
 				MoveNode *move = NULL;
-				if (board[i, j] == userM)
+				if (board[i][j] == userM)
 				{
 					move = getManMoves(pos, userM, userK, board, direction, 0);
 				}
-				else if (board[i,j] == userK)
+				else if (board[i][j] == userK)
 				{
 					//move = getKingMoves(pos);
 				}
@@ -1532,7 +1527,6 @@ void unitTestCheckStuckAndScore()
 	set_disc("<b,2>", "white", "m");
 	set_disc("<f,4>", "white", "m");
 	set_disc("<e,3>", "white", "m");
-	print_board(board);
 	s = score(board, BLACK);
 	assert(s == 3);
 
@@ -1543,7 +1537,14 @@ void unitTestCheckStuckAndScore()
 
 void unitTestMinimaxAndMoves()
 {
-
+	//format move to string:
+	char cmd[] = "move <b,2> to <d,4><f,6><h,4>";
+	trimwhitespace(cmd);
+	Move *move = parseMoveCommand(cmd);
+	char* res = getStringFormatMove(*move);
+	char cmdRes[] = "move <b,2> to <d,4><f,6><h,4>\n";
+	assert(strcmp(res, cmdRes) == 0);
+	freeMove(move);
 }
 
 int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
@@ -2036,6 +2037,46 @@ void GameState()
 
 }
 
+char* getStringFormatMove(Move move)
+{
+	char res[1024] = "move ";
+	Pos* curr = move.currPos;
+	char* curr_str = getStringFormatPos(curr);
+	strcat(res, curr_str);
+	strcat(res, " to ");
+	PosNode* posList = move.dest;
+	while (posList != NULL)
+	{
+		curr = posList->pos; 
+		curr_str = getStringFormatPos(curr);
+		strcat(res, curr_str);
+
+		posList = posList->next;
+	}
+	strcat(res, "\n");
+	strcat(res, "\0");
+	return res;
+}
+char* getStringFormatPos(Pos* pos)
+{
+	char res[1024] = "<";
+	char x_char = pos->x + 'a';
+	char x_str1[2];
+	char y_str1[2];
+	x_str1[0] = x_char;
+	x_str1[1] = '\0';
+	strcat(res, x_str1);//res = <x
+	strcat(res, ",");//res = <x,
+	int y_num = pos->y + 1;
+	char y_char = y_num + '0';
+	y_str1[0] = y_char;
+	y_str1[1] = '\0';
+	strcat(res, y_str1);
+	strcat(res, ">");
+	strcat(res, "\0");
+	return res;
+
+}
 /*if computerTurn or playerTurn return 1 - they won otherwise return 0*/
 int computerTurn()
 {
@@ -2044,13 +2085,16 @@ int computerTurn()
 	int scorRes = minimax(board, minimax_depth, 1, computerMove);
 	//perforam chosen  move
 	performMove(board, board, *computerMove, game_players.computer_direction);
+
 	//Todo:print computerMove!!
+	char* moveStr = getStringFormatMove(*computerMove);
+	printf("%s%s", "Computer: ", moveStr);
 
 	print_board(board);
+	//if score is winning return 1 and print computer win!
 	if (checkifPlayerWins(computer_color) == 1)
 		return 1;
-
-	//if score is winning return 1 and print computer win!
+	//else:return  0 and this is the user turn
 	return 0;
 }
 int userTurn()
@@ -2065,7 +2109,14 @@ int userTurn()
 	char* command = getString(stdin, 10);
 	if (strstr(command, "get_moves"))
 	{
-		//Todo:perform get moves for user
+		//call get moves and print it:
+		MoveNode* moves = getMoves(board, game_players.user_m, game_players.user_k, game_players.user_direction);
+		while (moves != NULL)
+		{
+			char*  moveStr = getStringFormatMove(*moves->move);
+			printf("%s", moveStr);
+			moves = moves->next;
+		}
 	}
 	else if (strstr(command, "move"))
 	{
@@ -2814,6 +2865,7 @@ int main()
 	unitTestsSettingFuncs();
 	unitTestValidMoves();
 	unitTestCheckStuckAndScore();
+	unitTestMinimaxAndMoves();
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
 
