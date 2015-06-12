@@ -410,7 +410,7 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 	}
 	
 	if (maxEats!=-1)
-		keepOnlyMaxEatNodes(firstMoveNode,maxEats);
+		firstMoveNode = keepOnlyMaxEatNodes(firstMoveNode, maxEats);
 
 	return firstMoveNode;
 }
@@ -498,6 +498,21 @@ MoveNode *createMoveNode(Pos pos, Pos destPos, int eat)
 
 	return moveNode;
 }
+
+
+void addMoveNodeToList(MoveNode **movesList, MoveNode **last, MoveNode * moveNode)
+{
+	if (!*(movesList)) //empty list
+	{
+		*(movesList) = moveNode;
+		*(last )= *(movesList);
+	}
+	else
+	{
+		(*(last))->next = moveNode;
+		last = (*(last))->next;
+	}
+}
 MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove)
 {
 	char curBoard[BOARD_SIZE][BOARD_SIZE];
@@ -545,16 +560,9 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 
 				MoveNode *moveNode = createMoveNode(pos, *(adj[i]), 0);
 
-				if (!movesList) //empty list
-				{
-					movesList = moveNode;
-					last = movesList;
-				}
-				else
-				{
-					last->next = moveNode;
-					last = last->next;
-				}
+
+				addMoveNodeToList(&movesList, &last, moveNode);
+
 				//todo free all?
 			}
 			else if (adjVal != userM && adjVal != userK) //eating?
@@ -592,18 +600,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				{
 					MoveNode *moveNode  = createMoveNode(pos, destPos, 1);
 
-					if (!movesList) //empty list
-					{
-						movesList = moveNode;
-						last = movesList;
-					}
-					else
-					{
-						last->next = moveNode;
-						last = last->next;
-					}
-
-					continue;
+					addMoveNodeToList(&movesList, &last, moveNode);
 					//todo free something?
 				}
 
@@ -625,17 +622,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 					moveNodeNew = moveNodeNew->next;
 					//free(moveNodeNew->move);
 					
-					if (!movesList) //empty list
-					{
-						movesList = moveNode;
-						last = movesList;
-					}
-					else
-					{
-						last->next = moveNode;
-						last = last->next;
-					}
-
+					addMoveNodeToList(&movesList, &last, moveNode);
 				}
 				//free(nextMovesList); //todo free nextMovesList		
 			}
@@ -687,7 +674,7 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 
 		char adjVal = curBoard[adj[i]->x][adj[i]->y];
 		if (adjVal == userK || adjVal == userM) //blocked
-			continue; //todo free adj[i]
+			continue; 
 
 		//todo check if adjval == oponent and eat
 		if (adjVal == EMPTY)
@@ -708,16 +695,7 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 			{
 				MoveNode *moveNode = createMoveNode(pos, *(nextPosOnSameDirection), 0);
 				
-				if (!movesList) //empty list
-				{
-					movesList = moveNode;
-					last = movesList;
-				}
-				else
-				{
-					last->next = moveNode;
-					last = last->next;
-				}
+				addMoveNodeToList(&movesList, &last, moveNode);
 
 				//todo create move for each one of this empty positions
 				nextPosOnSameDirection->x += xDiff;
@@ -760,16 +738,7 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 				//addMoveNodeToList(MoveNode* moveNode, Pos currPos, Pos destPos, int eat, MoveNode* last)
 				MoveNode *moveNode = createMoveNode(pos, *(mustBeEmptyInOrderToEat), 1);
 
-				if (!movesList) //empty list
-				{
-					movesList = moveNode;
-					last = movesList;
-				}
-				else
-				{
-					last->next = moveNode;
-					last = last->next;
-				}
+				addMoveNodeToList(&movesList, &last, moveNode);
 
 				continue;
 				//todo free something?
@@ -794,16 +763,7 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 				moveNodeNew = moveNodeNew->next;
 				//free(moveNodeNew->move);
 
-				if (!movesList) //empty list
-				{
-					movesList = moveNode;
-					last = movesList;
-				}
-				else
-				{
-					last->next = moveNode;
-					last = last->next;
-				}
+				addMoveNodeToList(&movesList, &last, moveNode);
 			}
 		}
 	}
