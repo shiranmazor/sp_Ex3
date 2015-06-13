@@ -269,7 +269,11 @@ int split(char *str, char c, char ***arr)
 	if (*arr == NULL)
 	{
 		perror_message("split");
-		//TODO:free all alocated memory of the program
+		if (objectsInMemory > 0)
+		{
+			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
+			scanf("%s");
+		}
 		exit(0);
 	}
 	p = str;
@@ -1149,7 +1153,6 @@ void unitTests()
 	clear_board(board);
 	board[1][1] = BLACK_M;
 	board[0][2] = WHITE_M;
-	//print_board(board);
 	movesList = getManMoves(pos, WHITE_M, WHITE_K, board, 'U', 0);
 	assert(movesList->next == NULL); //only one possible move
 	assert(movesList->move->currPos->x == pos.x);
@@ -1537,7 +1540,6 @@ void unitTestCheckStuckAndScore()
 	clear_board();
 	set_disc("<d,6>", "black", "k");
 	set_disc("<b,2>", "white", "m");
-	print_board(board);
 	s = score(board, WHITE);
 	assert(s == -2);
 
@@ -1578,16 +1580,21 @@ void unitTestMinimaxAndMoves()
 int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 {
 	int score = 0;
+	int computerHasMoves = isPlayerStuck(game_players.computer_m, game_players.computer_k,
+		game_players.user_m, game_players.user_k, game_players.computer_direction);
+	int userHasMoves = isPlayerStuck(game_players.user_m, game_players.user_k, game_players.computer_m,
+		game_players.computer_k, game_players.user_direction);
 	if (player_color == computer_color)
 	{
 
-		if (isPlayerStuck(game_players.computer_m, game_players.computer_k,
-			game_players.user_m, game_players.user_k, game_players.computer_direction) == 0)//we are stuck loose
+		if (computerHasMoves == 0)//we are stuck loose
+		{
 			score = -100;
-
-		else if (isPlayerStuck(game_players.user_m, game_players.user_k, game_players.computer_m,
-			game_players.computer_k, game_players.user_direction) == 0)//opponent stuck we win
-			score == 100;
+		}
+		else if (userHasMoves == 0)//opponent stuck we win
+		{
+			score = 100;
+		}	
 		else
 		{
 			//player is the computer
@@ -1624,11 +1631,9 @@ int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 	}
 	else 
 	{
-		if (isPlayerStuck(game_players.user_m, game_players.user_k, game_players.computer_m,
-			game_players.computer_k, game_players.user_direction) == 0)// we are stuck loose
-			score == -100;
-		else if (isPlayerStuck(game_players.computer_m, game_players.computer_k,
-			game_players.user_m, game_players.user_k, game_players.computer_direction) == 0) // opponent stuck we win 
+		if (userHasMoves== 0)// we are stuck loose
+			score = -100;
+		else if (computerHasMoves== 0) // opponent stuck we win 
 			score = 100;
 		else
 		{
@@ -1935,11 +1940,13 @@ void settingState()
 		reduceSpaces(command);
 		executeSettingCmd(command);
 
+		free(command);
 		command = getString(stdin, 10);
 	}
 	if (strcmp(command, "start") == 0)
 	{
 		//call game state on the board
+		free(command);
 		GameState(board);
 	}
 	else if (strcmp(command, "quit") == 0)
@@ -1954,7 +1961,7 @@ void settingState()
 
 		exit(0);
 	}
-	free(command);
+
 }
 
 void executeSettingCmd(char* input)
@@ -2058,9 +2065,17 @@ void GameState()
 	while (resComputer != 1 && resUser != 1)//main loop of the game
 	{
 		if (isComputerTurn == 1)
+		{
 			resComputer = computerTurn();
+			isComputerTurn = 0;
+		}
+			
 		else
+		{
 			resUser = userTurn();
+			isComputerTurn = 1;
+		}
+			
 	}		
 
 }
@@ -2110,20 +2125,22 @@ int computerTurn()
 {
 	//call minimax algorithm
 	Move* computerMove = NULL;
-	int scorRes = minimax(board, minimax_depth, 1, computerMove);
+	int scorRes = minimax(board, minimax_depth, 1, &computerMove);
 	//perforam chosen  move
 	performMove(board, board, *computerMove, game_players.computer_direction);
+	
 
 	//Todo:print computerMove!!
 	char* moveStr = getStringFormatMove(*computerMove);
+	
 	printf("%s%s", "Computer: ", moveStr);
-
 	print_board(board);
+	freeMove(computerMove);
 	//if score is winning return 1 and print computer win!
 	if (checkifPlayerWins(computer_color) == 1)
 		return 1;
 	//else:return  0 and this is the user turn
-	return 0;
+		return 0;
 }
 int userTurn()
 {
@@ -2137,38 +2154,119 @@ int userTurn()
 	char* command = getString(stdin, 10);
 	if (strstr(command, "get_moves"))
 	{
-		//call get moves and print it:
-		MoveNode* moves = getMoves(board, game_players.user_m, game_players.user_k, game_players.user_direction);
-		while (moves != NULL)
+		while(strcmp(command, "get_moves") == 0)
 		{
-			char*  moveStr = getStringFormatMove(*moves->move);
-			printf("%s", moveStr);
-			moves = moves->next;
+			//call get moves and print it:
+			MoveNode* moves = getMoves(board, game_players.user_m, game_players.user_k, game_players.user_direction);
+			MoveNode* movesPointer = moves;
+			while (movesPointer != NULL)
+			{
+				char*  moveStr = getStringFormatMove(*movesPointer->move);
+				printf("%s", moveStr);
+				movesPointer = movesPointer->next;
+			}
+			free(command);
+			command = getString(stdin, 10);
+			freeMoves(moves, NULL);
 		}
+		if (strstr(command, "move"))
+		{
+			Move *move = parseMoveCommand(command);//Invalid position on the board- move==NULL
+			int done = 0;
+			while (done == 0)
+			{
+				if (move == NULL)
+				{
+					free(command);
+					printf("%s", ENTER_YOUR_MOVE);
+					command = getString(stdin, 10);
+					if (strstr(command, "move"))
+					{
+						move = parseMoveCommand(command);
+					}
+				}
+				if (move != NULL)
+				{
+					done = performUserMove(*move);
+					if (done == 0)//move was illigal
+					{
+						freeMove(move);
+						move = NULL;
+					}
+				}
+			}
+			if (done == 1)
+			{
+				if (checkifPlayerWins(player_color) == 1)
+				{
+					freeMove(move);
+					free(command);
+					return 1;
+				}
+			}
+			if (command != NULL)
+				free(command);
+			if (move != NULL)
+				freeMove(move);
+
+		}
+		else if (strstr(command, "quit"))
+		{
+			free(command);
+			if (objectsInMemory > 0)
+			{
+				printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
+				scanf("%s");
+			}
+			exit(0);
+		}
+		
 	}
 	else if (strstr(command, "move"))
 	{
-		Move *move = parseMoveCommand(command);
-		if (move != NULL)
+		Move *move = parseMoveCommand(command);//Invalid position on the board- move==NULL
+		int done = 0;
+		while (done == 0)
 		{
-			performUserMove(*move);
-
+			if (move == NULL)
+			{
+				free(command);
+				printf("%s", ENTER_YOUR_MOVE);
+				command = getString(stdin, 10);
+				if (strstr(command, "move"))
+				{
+					move = parseMoveCommand(command);
+				}
+			}
+			if (move != NULL)
+			{
+				done = performUserMove(*move);
+				if (done == 0)//move was illigal
+				{
+					freeMove(move);
+					move = NULL;
+				}
+			}
+		}
+		if (done == 1)
+		{
 			if (checkifPlayerWins(player_color) == 1)
 			{
 				freeMove(move);
 				free(command);
-				return 1;			
-			}						
+				return 1;
+			}
 		}
-			
-		freeMove(move);
+		if (command != NULL)
+			free(command);
+		if (move != NULL)
+			freeMove(move);
 	}
 	else if (strstr(command, "quit"))
 	{
 		free(command);
 		exit(0);
 	}
-	free(command);
 }
 
 int checkifPlayerWins(int player_color)
@@ -2184,6 +2282,7 @@ int checkifPlayerWins(int player_color)
 	return 0;
 }
 
+/*return 0 if the move was not performed because of an error else return 1*/
 int performUserMove(Move move)
 {
 	char user_m;
@@ -2220,6 +2319,7 @@ int performUserMove(Move move)
 			return 0;
 		}
 	}
+
 	int player_color = WHITE;
 	if (computer_color == WHITE)
 		player_color = BLACK;
@@ -2237,7 +2337,7 @@ int performUserMove(Move move)
 		print_board(board);	
 	}
 		
-
+	return 1;
 }
 
 int checkMoveIsValidMan( Move move, char direction)
@@ -2804,7 +2904,7 @@ void performMove(char board[BOARD_SIZE][BOARD_SIZE], char newBoard[BOARD_SIZE][B
 }
 
 //recursive function for return the scoring result of the best move
-int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move* bestMove)
+int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move** bestMove)
 {
 	char playerm;
 	char playerk;
@@ -2832,21 +2932,24 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 	//check if no moves or depth is 0
 	if (moves == NULL || depth == 0)
 	{
+		//print_board(board);
 		int res = score(board, player_color);
-		free(moves);
-		return res;
+		freeMoves(moves,NULL);
+		return res*(-1);
 	}
 	else//############ let's generate minimax tree!
 	{
 		if (isMaxplayer == 1)//player is the computer
 		{
 			int bestValue = -100;
-
-			while (moves != NULL)
+			MoveNode* movesPointer = moves;
+			while (movesPointer != NULL)
 			{
 				int newRes = 0;
 				char newBoard[BOARD_SIZE][BOARD_SIZE];
-				performMove(board, newBoard, *(moves->move), direction);
+				performMove(board, newBoard, *(movesPointer->move), direction);
+				//print_board(board);
+				//print_board(newBoard);
 				newRes = minimax(newBoard, depth - 1, 0, bestMove);
 				
 
@@ -2854,31 +2957,36 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 				if (depth == minimax_depth && bestValue < newRes)
 				{
 					bestValue = newRes;
-					bestMove = moves->move;
+					*(bestMove) = movesPointer->move;
 					
 				}
 					
-				moves = moves->next;
+				movesPointer = movesPointer->next;
 			}
-			freeMoves(moves, bestMove);
+			freeMoves(moves, *(bestMove));
 			return bestValue;
 		}
 		else//player is the user:
 		{
 			int bestValue = 100;
-			while (moves != NULL)
+			MoveNode* movesPointer = moves;
+			while (movesPointer != NULL)
 			{
 				int newRes = 0;
 				char newBoard[BOARD_SIZE][BOARD_SIZE];
-				performMove(board, newBoard, *(moves->move), direction);
+				performMove(board, newBoard, *(movesPointer->move), direction);
+				//print_board(board);
+				//print_board(newBoard);
+
 				newRes = minimax(newBoard, depth - 1, 1,bestMove);
 				if (bestValue > newRes)
 					bestValue = newRes;
 				
 
-				moves = moves->next;
+				movesPointer = movesPointer->next;
 			}
-			freeMoves(moves, bestMove);
+
+			freeMoves(moves, *(bestMove));
 			return bestValue;
 
 		}
@@ -2889,11 +2997,21 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 
 int main()
 {
-	unitTests();
-	unitTestsSettingFuncs();
-	unitTestValidMoves();
-	unitTestCheckStuckAndScore();
-	unitTestMinimaxAndMoves();
+	//unitTests();
+	//unitTestsSettingFuncs();
+	//unitTestValidMoves();
+	//unitTestCheckStuckAndScore();
+	//unitTestMinimaxAndMoves();
+	//code for debug:
+	set_minimax_depth(2);
+	computer_color = BLACK;
+	game_players.user_m = WHITE_M;
+	game_players.user_k = WHITE_K;
+	game_players.computer_m = BLACK_M;
+	game_players.computer_k = BLACK_K;
+	game_players.computer_direction = 'D';
+	game_players.user_direction = 'U';
+
 
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
@@ -2901,5 +3019,4 @@ int main()
 	//print_message(WRONG_MINIMAX_DEPTH);
 	//perror_message("TEST");
 	return 0;
-	scanf("%s");
 }
