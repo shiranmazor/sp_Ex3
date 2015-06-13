@@ -79,6 +79,9 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE], int depth, int isMaxplayer, Move
 void freeMoves(MoveNode *moveNodeHead, Move* notDelete);
 char* getStringFormatMove(Move move);
 char* getStringFormatPos(Pos* pos);
+int boardInitializeOk();
+
+
 
 MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char direction);
 MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction);

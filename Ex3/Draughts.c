@@ -1941,37 +1941,81 @@ int checkClosedMovesKing(int i, int j, char playerM, char playerK, char opponent
 	return hasMoves;
 }
 
+int boardInitializeOk()
+{
+	int black_discs = 0;
+	int white_discs = 0;
+	for (int i = 0; i < BOARD_SIZE; i++)
+	{
+		for (int j = 0; j < BOARD_SIZE; j++)
+		{
+			if ((i + j) % 2 == 0)
+			{
+				if (board[i][j] == WHITE_M || board[i][j] == WHITE_K)
+					white_discs++;
+				if (board[i][j] == BLACK_M || board[i][j] == BLACK_K)
+					black_discs++;
+			}
+		}
+	}
+	if (white_discs == 0 && black_discs == 0)//board is Empty
+		return 0;
+	else if (white_discs == 0 || black_discs == 0)//there are discs of only one color
+		return 0;
+	else if (white_discs > 20 || black_discs > 20)//there are more than 20 discs of the same color
+		return 0;
+
+	return 1;
+
+}
+
 void settingState()
 {
 	init_board(board);
 	printf("%s", ENTER_SETTINGS);
 	char *command = getString(stdin, 10);
-	while (strcmp(command, "quit") != 0 && strcmp(command, "start") != 0)
+	int out = 0;
+	while (1)
 	{ 
 		reduceSpaces(command);
-		executeSettingCmd(command);
+		if (strcmp(command, "quit") != 0 && strcmp(command, "start") != 0)
+			executeSettingCmd(command);
+		else
+		{
+			if (strcmp(command, "start") == 0)
+			{
+				//check if board is initialize:
+				int ok = boardInitializeOk();
+				if (ok == 0)
+				{
+					printf("%s", WROND_BOARD_INITIALIZATION);
+				}
+				else
+				{
+					//call game state on the board
+					free(command);
+					GameState(board);
+				}
+
+			}
+			else if (strcmp(command, "quit") == 0)
+			{
+				//TODO:clean all memory
+				free(command);
+				if (objectsInMemory > 0)
+				{
+					printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
+					scanf("%s");
+				}
+
+				exit(0);
+			}
+		}
 
 		free(command);
 		command = getString(stdin, 10);
 	}
-	if (strcmp(command, "start") == 0)
-	{
-		//call game state on the board
-		free(command);
-		GameState(board);
-	}
-	else if (strcmp(command, "quit") == 0)
-	{
-		//TODO:clean all memory
-		free(command);
-		if (objectsInMemory > 0)
-		{
-			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
-			scanf("%s");
-		}
-
-		exit(0);
-	}
+	
 
 }
 
@@ -2093,7 +2137,7 @@ void GameState()
 
 char* getStringFormatMove(Move move)
 {
-	char res[1024] = "move ";
+	char res[1024] = "";
 	Pos* curr = move.currPos;
 	char* curr_str = getStringFormatPos(curr);
 	strcat(res, curr_str);
@@ -2144,7 +2188,7 @@ int computerTurn()
 	//Todo:print computerMove!!
 	char* moveStr = getStringFormatMove(*computerMove);
 	
-	printf("%s%s", "Computer: ", moveStr);
+	printf("%s%s", "Computer: move ", moveStr);
 	print_board(board);
 	freeMove(computerMove);
 	//if score is winning return 1 and print computer win!
@@ -2974,6 +3018,9 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 					
 				movesPointer = movesPointer->next;
 			}
+
+			if (!*(bestMove) && depth == minimax_depth)//all the  moves are bad
+				*(bestMove) = moves->move;
 			freeMoves(moves, *(bestMove));
 			return bestValue;
 		}
@@ -3008,11 +3055,11 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 
 int main()
 {
-	unitTests();
-	unitTestsSettingFuncs();
-	unitTestValidMoves();
-	unitTestCheckStuckAndScore();
-	unitTestMinimaxAndMoves();
+	//unitTests();
+	//unitTestsSettingFuncs();
+	//unitTestValidMoves();
+	//unitTestCheckStuckAndScore();
+	//unitTestMinimaxAndMoves();
 	//code for debug:
 	/*
 	set_minimax_depth(2);
