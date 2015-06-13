@@ -867,7 +867,8 @@ Pos * formatPos(char* pos_input)
 	if (pos->x < 0 || pos->x > 9 || pos->y<0 || pos->y>9 || ((pos->x+pos->y) %2 !=0))
 	{
 		printf("%s", WRONG_POSITION);
-		return NULL; //todo - is this OK? should be handled by caller?
+		free(pos);
+		return NULL; 
 	}
 	
 	return pos;
@@ -883,7 +884,7 @@ void remove_disc(char* input)
 		int x_int = pos->x;
 		board[x_int][pos->y] = EMPTY;
 	}
-	//freeArray(arr, arr_len);
+	free(pos);
 }
 
 /*
@@ -969,6 +970,7 @@ void set_disc(char* pos_input, char* color, char* type)
 				board[x_int][pos->y] = WHITE_M;
 		}
 	}
+	free(pos);
 }
 
 void unitTests()
@@ -1518,6 +1520,14 @@ void unitTestCheckStuckAndScore()
 	assert(s == 0);
 	
 	//still on init board:
+	//computer = black player:
+	computer_color = BLACK;
+	game_players.computer_direction = 'D';
+	game_players.computer_m = BLACK_M;
+	game_players.computer_k = BLACK_K;
+	game_players.user_k = WHITE_K;
+	game_players.user_m = WHITE_M;
+	game_players.user_direction = 'U';
 	remove_disc("<c,7>");
 	remove_disc("<e,9>");
 	remove_disc("<j,10>");
@@ -1527,6 +1537,7 @@ void unitTestCheckStuckAndScore()
 	clear_board();
 	set_disc("<d,6>", "black", "k");
 	set_disc("<b,2>", "white", "m");
+	print_board(board);
 	s = score(board, WHITE);
 	assert(s == -2);
 
@@ -1638,7 +1649,7 @@ int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
 						if (board[i][j] == game_players.computer_m)
 							opponent_counter++;
 						if (board[i][j] == game_players.computer_k)
-							opponent_counter = player_counter + 3;
+							opponent_counter = opponent_counter + 3;
 					}
 				}
 			}
@@ -2883,6 +2894,7 @@ int main()
 	unitTestValidMoves();
 	unitTestCheckStuckAndScore();
 	unitTestMinimaxAndMoves();
+
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
 
