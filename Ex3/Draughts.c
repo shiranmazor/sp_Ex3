@@ -3008,12 +3008,13 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 
 int main()
 {
-	//unitTests();
-	//unitTestsSettingFuncs();
-	//unitTestValidMoves();
-	//unitTestCheckStuckAndScore();
-	//unitTestMinimaxAndMoves();
+	unitTests();
+	unitTestsSettingFuncs();
+	unitTestValidMoves();
+	unitTestCheckStuckAndScore();
+	unitTestMinimaxAndMoves();
 	//code for debug:
+	/*
 	set_minimax_depth(2);
 	computer_color = BLACK;
 	game_players.user_m = WHITE_M;
@@ -3022,6 +3023,8 @@ int main()
 	game_players.computer_k = BLACK_K;
 	game_players.computer_direction = 'D';
 	game_players.user_direction = 'U';
+	*/
+	
 
 
 	printf("%s", WELCOME_TO_DRAUGHTS);
