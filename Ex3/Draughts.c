@@ -2036,6 +2036,10 @@ void executeSettingCmd(char* input)
 		{
 			print_board(board);
 		}
+		else
+		{
+			printf("%s", ILLEGAL_COMMAND);
+		}
 	}
 	else if (arr_len == 2)//rm <x,y>, user_color x, minimax_depth x
 	{
@@ -2071,6 +2075,10 @@ void executeSettingCmd(char* input)
 		else if (strcmp(arr[0], "rm") == 0)
 		{
 			remove_disc(arr[1]);
+		}
+		else
+		{
+			printf("%s", ILLEGAL_COMMAND);
 		}
 
 	}
@@ -2207,9 +2215,9 @@ int userTurn()
 
 	printf("%s", ENTER_YOUR_MOVE);
 	char* command = getString(stdin, 10);
-	if (strstr(command, "get_moves"))
+	while (strcmp(command, "quit") != 0)
 	{
-		while(strcmp(command, "get_moves") == 0)
+		if (strstr(command, "get_moves"))
 		{
 			//call get moves and print it:
 			MoveNode* moves = getMoves(board, game_players.user_m, game_players.user_k, game_players.user_direction);
@@ -2221,10 +2229,9 @@ int userTurn()
 				movesPointer = movesPointer->next;
 			}
 			free(command);
-			command = getString(stdin, 10);
 			freeMoves(moves, NULL);
 		}
-		if (strstr(command, "move"))
+		else if (strstr(command, "move"))
 		{
 			Move *move = parseMoveCommand(command);//Invalid position on the board- move==NULL
 			int done = 0;
@@ -2258,12 +2265,13 @@ int userTurn()
 					free(command);
 					return 1;
 				}
+				else
+					return 0;//if move was performed we are getting out
 			}
 			if (command != NULL)
 				free(command);
 			if (move != NULL)
 				freeMove(move);
-
 		}
 		else if (strstr(command, "quit"))
 		{
@@ -2275,53 +2283,24 @@ int userTurn()
 			}
 			exit(0);
 		}
-		
-	}
-	else if (strstr(command, "move"))
-	{
-		Move *move = parseMoveCommand(command);//Invalid position on the board- move==NULL
-		int done = 0;
-		while (done == 0)
+		else
 		{
-			if (move == NULL)
-			{
-				free(command);
-				printf("%s", ENTER_YOUR_MOVE);
-				command = getString(stdin, 10);
-				if (strstr(command, "move"))
-				{
-					move = parseMoveCommand(command);
-				}
-			}
-			if (move != NULL)
-			{
-				done = performUserMove(*move);
-				if (done == 0)//move was illigal
-				{
-					freeMove(move);
-					move = NULL;
-				}
-			}
+			printf("%s", ILLEGAL_COMMAND);
 		}
-		if (done == 1)
-		{
-			if (checkifPlayerWins(player_color) == 1)
-			{
-				freeMove(move);
-				free(command);
-				return 1;
-			}
-		}
-		if (command != NULL)
-			free(command);
-		if (move != NULL)
-			freeMove(move);
+
+		command = getString(stdin, 10);
 	}
-	else if (strstr(command, "quit"))
+	if (strstr(command, "quit"))
 	{
 		free(command);
+		if (objectsInMemory > 0)
+		{
+			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
+			scanf("%s");
+		}
 		exit(0);
 	}
+		
 }
 
 int checkifPlayerWins(int player_color)
