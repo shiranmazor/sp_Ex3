@@ -678,21 +678,32 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 		if (adjVal == userK || adjVal == userM) //blocked
 			continue; 
 
-		//todo check if adjval == oponent and eat
-		if (adjVal == EMPTY)
+		
+		MoveNode *nextMovesList;
+
+		int xDiff = adj[i]->x - pos.x;
+		int yDiff = adj[i]->y - pos.y;
+		Pos nextPosOnSameDirection;
+		nextPosOnSameDirection.x = adj[i]->x + xDiff;
+		nextPosOnSameDirection.y = adj[i]->y + yDiff;
+
+		if (!isValidPos(&nextPosOnSameDirection)) //we reached end of board
+			continue;
+
+		char nextToolOnTheSamePath = curBoard[nextPosOnSameDirection.x][nextPosOnSameDirection.y];
+
+		if (adjVal != EMPTY && adjVal != userK && adjVal != userM)
 		{
-			MoveNode *nextMovesList;
+			//opponent nearby!
+			if (nextToolOnTheSamePath == EMPTY) //can eat!
+			{
+				//MoveNode *moveNode = createMoveNode(pos, nextPosOnSameDirection, 1);
+				//addMoveNodeToList(&movesList, &last, moveNode);
+			}
+		}
+		else if (adjVal == EMPTY)
+		{
 
-			int xDiff = adj[i]->x - pos.x;
-			int yDiff = adj[i]->y - pos.y;
-			Pos nextPosOnSameDirection;
-			nextPosOnSameDirection.x = adj[i]->x + xDiff;
-			nextPosOnSameDirection.y = adj[i]->y + yDiff;
-
-			if (!isValidPos(&nextPosOnSameDirection)) //we reached end of board
-				continue;
-
-			char nextToolOnTheSamePath = curBoard[nextPosOnSameDirection.x][nextPosOnSameDirection.y];
 			while (nextToolOnTheSamePath == EMPTY)
 			{
 				MoveNode *moveNode = createMoveNode(pos, nextPosOnSameDirection, 0);
