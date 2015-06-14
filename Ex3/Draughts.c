@@ -460,7 +460,7 @@ Pos * getAdjPositions(Pos pos, Pos** adj)
 			adj[i] = NULL;;
 		}
 	}
-	return adj;
+	//return adj;
 }
 
 MoveNode *keepOnlyMaxEatNodes(MoveNode *movesList, int maxEats)
