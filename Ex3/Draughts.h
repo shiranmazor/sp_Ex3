@@ -82,7 +82,7 @@ char* getStringFormatPos(Pos* pos);
 int boardInitializeOk();
 
 
-
+void addMoveNodeToList(MoveNode **movesList, MoveNode **last, MoveNode * moveNode);
 MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char direction);
 MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction);
 MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove);

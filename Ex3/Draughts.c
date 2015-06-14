@@ -3096,7 +3096,7 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 
 int main()
 {
-	unitTests();
+	//unitTests();
 	//unitTestsSettingFuncs();
 	//unitTestValidMoves();
 	//unitTestCheckStuckAndScore();
