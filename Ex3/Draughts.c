@@ -3042,6 +3042,7 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 
 			if (!*(bestMove) && depth == minimax_depth)//all the  moves are bad
 				*(bestMove) = moves->move;
+
 			freeMoves(moves, *(bestMove));
 			return bestValue;
 		}
@@ -3070,7 +3071,7 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 		}
 
 	}
-	freeMoves(moves, bestMove);
+	freeMoves(moves, *(bestMove));
 }
 
 int main()
@@ -3081,8 +3082,8 @@ int main()
 	//unitTestCheckStuckAndScore();
 	//unitTestMinimaxAndMoves();
 	//code for debug:
-	/*
-	set_minimax_depth(2);
+	
+	set_minimax_depth(3);
 	computer_color = BLACK;
 	game_players.user_m = WHITE_M;
 	game_players.user_k = WHITE_K;
@@ -3090,10 +3091,8 @@ int main()
 	game_players.computer_k = BLACK_K;
 	game_players.computer_direction = 'D';
 	game_players.user_direction = 'U';
-	*/
 	
-
-
+	
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
 
