@@ -1250,6 +1250,25 @@ void unitTests()
 	assert(movesList->move->dest->pos->x == 8);
 	assert(movesList->move->dest->pos->y == 8);
 	freeMoves(movesList, NULL);
+
+
+	//get king:
+	board[1][1] = BLACK_M;
+	movesList = getKingMoves(pos, WHITE_M, WHITE_K, board, 'U');
+	assert(movesList != NULL);
+	assert(movesList->next == NULL);
+	assert(movesList->move->eat == 1);
+	assert(movesList->move->dest->pos->x == 2);
+	assert(movesList->move->dest->pos->y == 2);
+	freeMoves(movesList, NULL);
+	
+	board[2][2] = BLACK_M;
+	movesList = getKingMoves(pos, WHITE_M, WHITE_K, board, 'U');
+	assert(movesList == NULL);
+
+
+	
+
 }
 
 void unitTestsSettingFuncs()
@@ -3076,7 +3095,7 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 
 int main()
 {
-	//unitTests();
+	unitTests();
 	//unitTestsSettingFuncs();
 	//unitTestValidMoves();
 	//unitTestCheckStuckAndScore();
