@@ -701,6 +701,48 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 			//opponent nearby!
 			if (nextToolOnTheSamePath == EMPTY) //can eat!
 			{
+				//now we can eat!@#!
+				if (maxEats < 1)
+					maxEats = 1;
+
+				curBoard[nextPosOnSameDirection.x][nextPosOnSameDirection.y] = EMPTY;
+
+				//maybe we can eat more!
+				nextMovesList = getManMoves(nextPosOnSameDirection, userM, userK, curBoard, 'b', 1); //"both" since we now can eat backword
+
+				if (!nextMovesList) //can't eat more
+				{
+					MoveNode *moveNode = createMoveNode(pos, nextPosOnSameDirection, 1);
+					addMoveNodeToList(&movesList, &last, moveNode);
+					continue;
+				}
+
+				//maybe we ate more!
+				MoveNode *moveNodeNew = nextMovesList;
+				while (moveNodeNew)
+				{
+					if (moveNodeNew->move->eat < maxEats)
+					{
+						MoveNode *toFree = moveNodeNew;
+						moveNodeNew = moveNodeNew->next;
+						free(toFree);
+						continue;
+					}
+					else
+					{
+						maxEats = 1 + moveNodeNew->move->eat;
+					}
+
+					MoveNode *moveNode = createMoveNode(pos, nextPosOnSameDirection, maxEats);
+					MoveNode *toFree = moveNodeNew;
+
+					moveNode->move->dest->next = moveNodeNew->move->dest;
+					moveNodeNew = moveNodeNew->next;
+
+					freeMoveWithoutDest(toFree);
+
+					addMoveNodeToList(&movesList, &last, moveNode);
+				}
 				//MoveNode *moveNode = createMoveNode(pos, nextPosOnSameDirection, 1);
 				//addMoveNodeToList(&movesList, &last, moveNode);
 			}
@@ -3025,7 +3067,6 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 
 			freeMoves(moves, *(bestMove));
 			return bestValue;
-
 		}
 
 	}
