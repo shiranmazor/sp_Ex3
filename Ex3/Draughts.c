@@ -33,7 +33,7 @@ void myFree(void  *memory) {
 	free(memory);
 }
 
-void *myCalloc(void  *memory, size_t size) {
+void *myCalloc(size_t  *memory, size_t size) {
 	objectsInMemory++;
 	void *ptr = calloc(memory, size);
 	assert(ptr != NULL);
