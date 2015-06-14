@@ -81,7 +81,7 @@ char* getStringFormatMove(Move move);
 char* getStringFormatPos(Pos* pos);
 int boardInitializeOk();
 
-
+void getAdjPositions(Pos pos, Pos** adj);
 void addMoveNodeToList(MoveNode **movesList, MoveNode **last, MoveNode * moveNode);
 MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, char direction);
 MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction);

@@ -33,9 +33,9 @@ void myFree(void  *memory) {
 	free(memory);
 }
 
-void *myCalloc(size_t  *memory, size_t size) {
+void *myCalloc(size_t  Count, size_t size) {
 	objectsInMemory++;
-	void *ptr = calloc(memory, size);
+	void *ptr = calloc(Count, size);
 	assert(ptr != NULL);
 	return ptr;
 }
@@ -436,7 +436,7 @@ int isValidPos(Pos *pos)
 	return 1;
 }
 
-Pos * getAdjPositions(Pos pos, Pos** adj)
+void getAdjPositions(Pos pos, Pos** adj)
 {
 	//down:
 	adj[0]->x = pos.x - 1;
