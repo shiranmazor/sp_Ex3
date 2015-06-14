@@ -416,7 +416,7 @@ MoveNode * getMoves(char board[BOARD_SIZE][BOARD_SIZE], char userM, char userK, 
 					}
 					
 					moveNode = moveNode->next;
-					free(toFree);
+					freeMoveNode(toFree);
 				}
 			}
 		}
@@ -3024,6 +3024,7 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 	}
 	//get user and
 	MoveNode* moves = getMoves(board, playerm, playerk, direction);
+
 	//check if no moves or depth is 0
 	if (moves == NULL || depth == 0)
 	{
