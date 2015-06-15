@@ -2356,7 +2356,7 @@ int userTurn()
 int checkifPlayerWins(int player_color)
 {
 	int scoreNum = score(board, player_color);
-	char* color = player_color == WHITE ? "WHITE" : "BLACK" ;
+	char* color = player_color == WHITE ? "White" : "Black" ;
 	if (scoreNum == 100)
 	{
 		printf("%s %s", color, "player wins!\n");
