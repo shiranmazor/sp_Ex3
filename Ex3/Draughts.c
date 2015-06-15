@@ -2028,6 +2028,15 @@ int boardInitializeOk()
 
 void settingState()
 {
+	//init game players and color for the user, defult user color - white:
+	computer_color = BLACK;
+	game_players.user_m = WHITE_M;
+	game_players.user_k = WHITE_K;
+	game_players.computer_m = BLACK_M;
+	game_players.computer_k = BLACK_K;
+	game_players.computer_direction = 'D';
+	game_players.user_direction = 'U';
+
 	init_board(board);
 	printf("%s", ENTER_SETTINGS);
 	char *command = getString(stdin, 10);
@@ -3059,25 +3068,15 @@ int main()
 	//unitTestsSettingFuncs();
 	//unitTestValidMoves();
 	//unitTestCheckStuckAndScore();
-	unitTestMinimaxAndMoves();
+	//unitTestMinimaxAndMoves();
 	//code for debug:
 	/*
 	set_minimax_depth(3);
-	computer_color = BLACK;
-	game_players.user_m = WHITE_M;
-	game_players.user_k = WHITE_K;
-	game_players.computer_m = BLACK_M;
-	game_players.computer_k = BLACK_K;
-	game_players.computer_direction = 'D';
-	game_players.user_direction = 'U';
 	*/
 	
 	
 	
 	printf("%s", WELCOME_TO_DRAUGHTS);
 	settingState(board);
-
-	//print_message(WRONG_MINIMAX_DEPTH);
-	//perror_message("TEST");
 	return 0;
 }
