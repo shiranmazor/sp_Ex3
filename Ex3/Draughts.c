@@ -528,11 +528,12 @@ caller should free all returned linked list.
 MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BOARD_SIZE], char direction, int onlyEatMove)
 {
 	char curBoard[BOARD_SIZE][BOARD_SIZE];
+	memcpy(&curBoard[0][0], &board[0][0], sizeof(curBoard));
 	//copy board
-	for (int i = 0; i<10; i++)
+	/*for (int i = 0; i<10; i++)
 	{
 		memcpy(&curBoard[i], &board[i], sizeof(board[0]));
-	}
+	}*/
 
 	Pos** adj = malloc(4*sizeof(Pos*));
 	for (int a = 0; a < 4; a++)
@@ -571,7 +572,7 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 				MoveNode *nextMovesList;
 				int xDiff = adj[i]->x - pos.x;
 				int yDiff = adj[i]->y - pos.y;
-				if (adj[i]->x + xDiff > BOARD_SIZE || adj[i]->x + xDiff<0 || adj[i]->y + yDiff > BOARD_SIZE || adj[i]->y + yDiff < 0) //next tool in this direction is outside the board
+				if (adj[i]->x + xDiff > BOARD_SIZE-1 || adj[i]->x + xDiff<0 || adj[i]->y + yDiff > BOARD_SIZE-1 || adj[i]->y + yDiff < 0) //next tool in this direction is outside the board
 					continue;
 
 				char nextToolOnTheSamePath = curBoard[adj[i]->x + xDiff][adj[i]->y + yDiff];
