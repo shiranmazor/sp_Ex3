@@ -476,7 +476,10 @@ MoveNode *keepOnlyMaxEatNodes(MoveNode *movesList, int maxEats)
 				prev->next = moveNode->next; //remove this element as it has low number of eats
 			}
 		}
-		prev = moveNode;
+		else
+		{
+			prev = moveNode;
+		}
 		moveNode = moveNode->next;
 		freeMoveNode(toFree);
 	}
