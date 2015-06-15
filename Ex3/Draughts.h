@@ -75,7 +75,7 @@ void performKingMove(char board[BOARD_SIZE][BOARD_SIZE],Move move, char directio
 int checkifPlayerWins(int player_color);
 Pos getOponnentPos(Pos* curr, Pos* next);
 int isManBecomeKing(Pos* next, char direction);
-int minimax(char board[BOARD_SIZE][BOARD_SIZE], int depth, int isMaxplayer, Move* bestMove);
+int minimax(char board[BOARD_SIZE][BOARD_SIZE], int depth, int isMaxplayer, Move** bestMove);
 void freeMoves(MoveNode *moveNodeHead, Move* notDelete);
 char* getStringFormatMove(Move move);
 char* getStringFormatPos(Pos* pos);

@@ -269,11 +269,6 @@ int split(char *str, char c, char ***arr)
 	if (*arr == NULL)
 	{
 		perror_message("split");
-		if (objectsInMemory > 0)
-		{
-			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
-			scanf("%s");
-		}
 		exit(0);
 	}
 	p = str;
@@ -1647,6 +1642,7 @@ void unitTestMinimaxAndMoves()
 	char cmdRes[] = "<b,2> to <d,4><f,6><h,4>\n";
 	assert(strcmp(res, cmdRes) == 0);
 	freeMove(move);
+	free(res);
 }
 
 int score(char board[BOARD_SIZE][BOARD_SIZE],int player_color)
@@ -2035,7 +2031,6 @@ void settingState()
 	init_board(board);
 	printf("%s", ENTER_SETTINGS);
 	char *command = getString(stdin, 10);
-	int out = 0;
 	while (1)
 	{ 
 		reduceSpaces(command);
@@ -2063,11 +2058,6 @@ void settingState()
 			{
 				//TODO:clean all memory
 				free(command);
-				if (objectsInMemory > 0)
-				{
-					printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
-					scanf("%s");
-				}
 
 				exit(0);
 			}
@@ -2206,10 +2196,11 @@ void GameState()
 
 char* getStringFormatMove(Move move)
 {
-	char res[1024] = "";
+	char* res = (char *) malloc(sizeof(char) *1024);
 	Pos* curr = move.currPos;
 	char* curr_str = getStringFormatPos(curr);
-	strcat(res, curr_str);
+	strcpy(res, curr_str);
+	free(curr_str);
 	strcat(res, " to ");
 	PosNode* posList = move.dest;
 	while (posList != NULL)
@@ -2218,6 +2209,7 @@ char* getStringFormatMove(Move move)
 		curr_str = getStringFormatPos(curr);
 		strcat(res, curr_str);
 
+		free(curr_str);
 		posList = posList->next;
 	}
 	strcat(res, "\n");
@@ -2226,21 +2218,16 @@ char* getStringFormatMove(Move move)
 }
 char* getStringFormatPos(Pos* pos)
 {
-	char res[1024] = "<";
+	char* res = (char *)malloc(sizeof(char)* 512);
+	res[0] = '<';
 	char x_char = pos->x + 'a';
-	char x_str1[2];
-	char y_str1[2];
-	x_str1[0] = x_char;
-	x_str1[1] = '\0';
-	strcat(res, x_str1);//res = <x
-	strcat(res, ",");//res = <x,
+	res[1] = x_char;
+	res[2] = ',';
 	int y_num = pos->y + 1;
 	char y_char = y_num + '0';
-	y_str1[0] = y_char;
-	y_str1[1] = '\0';
-	strcat(res, y_str1);
-	strcat(res, ">");
-	strcat(res, "\0");
+	res[3] = y_char;
+	res[4] = '>';
+	res[5] = '\0';
 	return res;
 
 }
@@ -2260,6 +2247,7 @@ int computerTurn()
 	printf("%s%s", "Computer: move ", moveStr);
 	print_board(board);
 	freeMove(computerMove);
+	free(moveStr);
 	//if score is winning return 1 and print computer win!
 	if (checkifPlayerWins(computer_color) == 1)
 		return 1;
@@ -2288,6 +2276,7 @@ int userTurn()
 				char*  moveStr = getStringFormatMove(*movesPointer->move);
 				printf("%s", moveStr);
 				movesPointer = movesPointer->next;
+				free(moveStr);
 			}
 			free(command);
 			freeMoves(moves, NULL);
@@ -2337,16 +2326,12 @@ int userTurn()
 		else if (strstr(command, "quit"))
 		{
 			free(command);
-			if (objectsInMemory > 0)
-			{
-				printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
-				scanf("%s");
-			}
 			exit(0);
 		}
 		else
 		{
 			printf("%s", ILLEGAL_COMMAND);
+			
 		}
 
 		command = getString(stdin, 10);
@@ -2354,13 +2339,10 @@ int userTurn()
 	if (strstr(command, "quit"))
 	{
 		free(command);
-		if (objectsInMemory > 0)
-		{
-			printf("You have a memory leak! There are %d objects that were allocated but never freed", objectsInMemory);
-			scanf("%s");
-		}
+
 		exit(0);
 	}
+	return 0;
 		
 }
 
