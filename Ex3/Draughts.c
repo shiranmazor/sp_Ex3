@@ -1644,7 +1644,7 @@ void unitTestMinimaxAndMoves()
 	trimwhitespace(cmd);
 	Move *move = parseMoveCommand(cmd);
 	char* res = getStringFormatMove(*move);
-	char cmdRes[] = "move <b,2> to <d,4><f,6><h,4>\n";
+	char cmdRes[] = "<b,2> to <d,4><f,6><h,4>\n";
 	assert(strcmp(res, cmdRes) == 0);
 	freeMove(move);
 }
@@ -3100,9 +3100,9 @@ int main()
 	//unitTestsSettingFuncs();
 	//unitTestValidMoves();
 	//unitTestCheckStuckAndScore();
-	//unitTestMinimaxAndMoves();
+	unitTestMinimaxAndMoves();
 	//code for debug:
-	
+	/*
 	set_minimax_depth(3);
 	computer_color = BLACK;
 	game_players.user_m = WHITE_M;
@@ -3111,6 +3111,8 @@ int main()
 	game_players.computer_k = BLACK_K;
 	game_players.computer_direction = 'D';
 	game_players.user_direction = 'U';
+	*/
+	
 	
 	
 	printf("%s", WELCOME_TO_DRAUGHTS);
