@@ -2323,7 +2323,12 @@ int userTurn()
 					return 1;
 				}
 				else
+				{
+					freeMove(move);
+					free(command);
 					return 0;//if move was performed we are getting out
+				}
+					
 			}
 			if (command != NULL)
 				free(command);
