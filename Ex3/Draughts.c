@@ -2236,7 +2236,7 @@ int computerTurn()
 {
 	//call minimax algorithm
 	Move* computerMove = NULL;
-	int scorRes = minimax(board, minimax_depth, 1, &computerMove);
+	minimax(board, minimax_depth, 1, &computerMove);
 	//perforam chosen  move
 	performMove(board, board, *computerMove, game_players.computer_direction);
 	
@@ -2362,10 +2362,6 @@ int checkifPlayerWins(int player_color)
 /*return 0 if the move was not performed because of an error else return 1*/
 int performUserMove(Move move)
 {
-	char user_m;
-	char user_k;
-	char computer_m;
-	char computer_k;
 	int king = 0;
 	//check if disc is king:
 	if (board[move.currPos->x][move.currPos->y] == game_players.user_k)
@@ -2396,10 +2392,6 @@ int performUserMove(Move move)
 			return 0;
 		}
 	}
-
-	int player_color = WHITE;
-	if (computer_color == WHITE)
-		player_color = BLACK;
 		
 	//perform moves - if we eat set empty at opponent
 	if (king == 0)
@@ -2529,7 +2521,6 @@ int checkMoveIsValidKing(Move move, char direction)
 		
 
 	int valid = 0;
-	int eat = 0;
 	Pos *currPos = move.currPos;
 	Pos *nextPos = move.dest->pos;
 	//we already check bounderies in parse move command
@@ -2541,7 +2532,6 @@ int checkMoveIsValidKing(Move move, char direction)
 	else
 	{
 		//we are on diagonal
-		int empty = 1;
 		int opponent_count = 0;
 		//we have 4 cases
 		//case 1 - up right
@@ -2820,23 +2810,17 @@ void performManMove(char board[BOARD_SIZE][BOARD_SIZE],Move move, char direction
 
 void performKingMove(char board[BOARD_SIZE][BOARD_SIZE], Move move, char direction)
 {
-	char player_color;
-	char player_m;
 	char player_k;
 	char oponnet_m;
 	char oponnent_k;
 	if (direction == 'U')
 	{
-		player_color = WHITE;
-		player_m = WHITE_M;
 		player_k = WHITE_K;
 		oponnet_m = BLACK_M;
 		oponnent_k = BLACK_K;
 	}
 	else
 	{
-		player_color = BLACK;
-		player_m = BLACK_M;
 		player_k = BLACK_K;
 		oponnet_m = WHITE_M;
 		oponnent_k = WHITE_K;
@@ -2946,21 +2930,14 @@ this function is for the minimax algo*/
 void performMove(char board[BOARD_SIZE][BOARD_SIZE], char newBoard[BOARD_SIZE][BOARD_SIZE], Move move, char direction)
 {
 	int king = 0;
-	char playerm;
 	char playerk;
-	int player_color = WHITE;
 	if (direction == game_players.computer_direction)
 	{
-		playerm = game_players.computer_m;
 		playerk = game_players.computer_k;
-		player_color = computer_color;
 	}
 	else
 	{
-		playerm = game_players.user_m;
 		playerk = game_players.user_k;
-		if (computer_color == WHITE)
-			player_color = BLACK;
 	}
 	//check if disc is king:
 	if (board[move.currPos->x][move.currPos->y] == playerk)
