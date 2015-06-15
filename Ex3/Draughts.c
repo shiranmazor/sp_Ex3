@@ -957,13 +957,15 @@ void init_board(char board[BOARD_SIZE][BOARD_SIZE]){
 void set_minimax_depth(int depth)
 {
 	if (depth < 1 || depth > 6)
-	if (printf("%s", WRONG_MINIMAX_DEPTH) < 0)
 	{
-		perror_message("set_minimax_depth");
-		exit(0);
+		if (printf("%s", WRONG_MINIMAX_DEPTH) < 0)
+		{
+			perror_message("set_minimax_depth");
+			exit(0);
+		}
+		else
+			minimax_depth = depth;
 	}
-	else
-		minimax_depth = depth;
 }
 
 /*
@@ -2503,7 +2505,7 @@ int userTurn()
 		else
 		{
 			free(command);
-			if (("%s", ILLEGAL_COMMAND) < 0)
+			if (printf("%s", ILLEGAL_COMMAND) < 0)
 			{
 				perror_message("userTurn");
 				exit(0);
