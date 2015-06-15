@@ -2352,6 +2352,7 @@ int userTurn()
 		}
 		else
 		{
+			free(command);
 			printf("%s", ILLEGAL_COMMAND);
 			
 		}
