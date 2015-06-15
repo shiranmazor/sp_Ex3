@@ -157,8 +157,12 @@ char *str_replace(char *orig, char *rep, char *with) {
 
 	tmp = result = malloc(strlen(orig) + (len_with - len_rep) * count + 1);
 
-	if (!result)
-		return NULL;
+	if (result == NULL)
+	{
+		free(orig);
+		perror_message("str_replace");
+		exit(0);
+	}
 
 	while (count--) {
 		ins = strstr(orig, rep);
@@ -181,16 +185,22 @@ char* getString(FILE* fp, size_t size)
 	int ch;
 	size_t len = 0;
 	str = realloc(NULL, sizeof(char)*size);
-	if (!str)
-		return str;
+	if (str == NULL)
+	{
+		perror_message("getString");
+		exit(0);
+	}
 	while (EOF != (ch = fgetc(fp)) && ch != '\n')
 	{
 		str[len++] = ch;
 		if (len == size)
 		{
 			str = realloc(str, sizeof(char)*(size += 16));
-			if (!str)
-				return str;
+			if (str == NULL)
+			{
+				perror_message("getString");
+				exit(0);
+			}
 		}
 	}
 	str[len++] = '\0';
@@ -209,8 +219,9 @@ char* replace(char *s, char ch, char *repl)
 	char *res = malloc(strlen(s) + (rlen - 1)*count + 1);
 	if (res == NULL)
 	{
-		perror("memory allocation in replace has failed!");
-		assert(res != NULL);
+		free(s);
+		perror_message("replace");
+		exit(0);
 	}
 
 	char *ptr = res;
@@ -266,6 +277,7 @@ int split(char *str, char c, char ***arr)
 	*arr = (char**)malloc(num);
 	if (*arr == NULL)
 	{
+		free(str);
 		perror_message("split");
 		exit(0);
 	}
@@ -280,7 +292,7 @@ int split(char *str, char c, char ***arr)
 			if ((*arr)[i] == NULL)
 			{
 				perror_message("split");
-				//TODO:free all alocated memory of the program
+				free(str);
 				exit(0);
 			}
 
@@ -296,7 +308,7 @@ int split(char *str, char c, char ***arr)
 	if ((*arr)[i] == NULL)
 	{
 		perror_message("split");
-		//TODO:free all alocated memory of the program
+		free(str);
 		exit(0);
 	}
 
@@ -490,12 +502,37 @@ MoveNode *keepOnlyMaxEatNodes(MoveNode *movesList, int maxEats)
 MoveNode *createMoveNode(Pos pos, Pos destPos, int eat)
 {
 	MoveNode *moveNode = malloc(sizeof(MoveNode));
+	if (moveNode == NULL)
+	{
+		perror_message("createMoveNode");
+		exit(0);
+	}
 	Move *move = malloc(sizeof(Move));
+	if (move == NULL)
+	{
+		perror_message("createMoveNode");
+		exit(0);
+	}
 	move->currPos = malloc(sizeof(Pos));
+	if (move->currPos == NULL)
+	{
+		perror_message("createMoveNode");
+		exit(0);
+	}
 	move->currPos->x = pos.x;
 	move->currPos->y = pos.y;
 	move->dest = malloc(sizeof(PosNode));
+	if (move->dest == NULL)
+	{
+		perror_message("createMoveNode");
+		exit(0);
+	}
 	move->dest->pos = malloc(sizeof(Pos));
+	if (move->dest->pos == NULL)
+	{
+		perror_message("createMoveNode");
+		exit(0);
+	}
 	move->dest->pos->x = destPos.x;
 	move->dest->pos->y = destPos.y;
 	move->dest->next = NULL;
@@ -539,9 +576,20 @@ MoveNode *getManMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][BO
 	}*/
 
 	Pos** adj = malloc(4*sizeof(Pos*));
+	if (adj == NULL)
+	{
+		perror_message("getManMoves");
+		exit(0);
+	}
 	for (int a = 0; a < 4; a++)
 	{
 		adj[a] = malloc(sizeof(Pos));
+		if (adj[a] == NULL)
+		{
+			free(adj);
+			perror_message("getManMoves");
+			exit(0);
+		}
 	}
 
 	getAdjPositions(pos, adj);
@@ -661,8 +709,22 @@ MoveNode *getKingMoves(Pos pos, char userM, char userK, char board[BOARD_SIZE][B
 		memcpy(&curBoard[i], &board[i], sizeof(board[0]));
 
 	Pos** adj = malloc(4 * sizeof(Pos*));
+	if (adj == NULL)
+	{
+		perror_message("getManMoves");
+		exit(0);
+	}
 	for (int a = 0; a < 4; a++)
+	{
 		adj[a] = malloc(sizeof(Pos));
+		if (adj[a] == NULL)
+		{
+			free(adj);
+			perror_message("getManMoves");
+			exit(0);
+		}
+	}
+		
 
 	getAdjPositions(pos, adj);
 
@@ -895,7 +957,11 @@ void init_board(char board[BOARD_SIZE][BOARD_SIZE]){
 void set_minimax_depth(int depth)
 {
 	if (depth < 1 || depth > 6)
-		printf("%s", WRONG_MINIMAX_DEPTH);
+	if (printf("%s", WRONG_MINIMAX_DEPTH) < 0)
+	{
+		perror_message("set_minimax_depth");
+		exit(0);
+	}
 	else
 		minimax_depth = depth;
 }
@@ -907,6 +973,12 @@ Pos * formatPos(char* pos_input)
 {
 	char **arr = NULL;
 	Pos* pos = malloc(sizeof(Pos));
+	if (pos == NULL)
+	{
+		free(pos_input);
+		perror_message("formatPos");
+		exit(0);
+	}
 	pos_input = replace(pos_input, '<', "");
 	char * toFree = pos_input;
 	pos_input = replace(pos_input, '>', "");
@@ -920,7 +992,11 @@ Pos * formatPos(char* pos_input)
 	
 	if (pos->x < 0 || pos->x > 9 || pos->y<0 || pos->y>9 || ((pos->x+pos->y) %2 !=0))
 	{
-		printf("%s", WRONG_POSITION);
+		if (printf("%s", WRONG_POSITION) < 0)
+		{
+			perror_message("set_minimax_depth");
+			exit(0);
+		}
 		free(pos);
 		return NULL; 
 	}
@@ -962,6 +1038,12 @@ Move * parseMoveCommand(char *command)
 	}
 
 	Move *move = (Move*) malloc(sizeof(Move));
+	if (move == NULL)
+	{
+		free(command);
+		perror_message("parseMoveCommand");
+		exit(0);
+	}
 	
 
 	char** arr = NULL;
@@ -978,6 +1060,12 @@ Move * parseMoveCommand(char *command)
 	for (int i = 0; i < destArrLen-1; i++)
 	{
 		PosNode *posToAdd = malloc(sizeof(PosNode));
+		if (posToAdd == NULL)
+		{
+			free(command);
+			perror_message("parseMoveCommand");
+			exit(0);
+		}
 		posToAdd->pos = formatPos(destArr[i]);
 		if (posToAdd->pos == NULL)
 			return NULL;
@@ -2040,7 +2128,11 @@ void settingState()
 	game_players.user_direction = 'U';
 
 	init_board(board);
-	printf("%s", ENTER_SETTINGS);
+	if (printf("%s", ENTER_SETTINGS) < 0)
+	{
+		perror_message("set_minimax_depth");
+		exit(0);
+	}
 	char *command = getString(stdin, 10);
 	while (1)
 	{ 
@@ -2055,7 +2147,12 @@ void settingState()
 				int ok = boardInitializeOk();
 				if (ok == 0)
 				{
-					printf("%s", WROND_BOARD_INITIALIZATION);
+					if (printf("%s", WROND_BOARD_INITIALIZATION) < 0)
+					{
+						free(command);
+						perror_message("set_minimax_depth");
+						exit(0);
+					}
 				}
 				else
 				{
@@ -2100,7 +2197,13 @@ void executeSettingCmd(char* input)
 		}
 		else
 		{
-			printf("%s", ILLEGAL_COMMAND);
+			if (printf("%s", ILLEGAL_COMMAND) < 0)
+			{
+				free(arr);
+				free(input);
+				perror_message("set_minimax_depth");
+				exit(0);
+			}
 		}
 	}
 	else if (arr_len == 2)//rm <x,y>, user_color x, minimax_depth x
@@ -2140,7 +2243,13 @@ void executeSettingCmd(char* input)
 		}
 		else
 		{
-			printf("%s", ILLEGAL_COMMAND);
+			if (printf("%s", ILLEGAL_COMMAND) < 0)
+			{
+				free(arr);
+				free(input);
+				perror_message("set_minimax_depth");
+				exit(0);
+			}
 		}
 
 	}
@@ -2150,7 +2259,12 @@ void executeSettingCmd(char* input)
 	}
 	else
 	{
-		printf("%s", ILLEGAL_COMMAND);
+		if (printf("%s", ILLEGAL_COMMAND) < 0)
+		{
+			free(input);
+			perror_message("set_minimax_depth");
+			exit(0);
+		}
 	}
 
 
@@ -2209,6 +2323,11 @@ void GameState()
 char* getStringFormatMove(Move move)
 {
 	char* res = (char *) malloc(sizeof(char) *1024);
+	if (res == NULL)
+	{
+		perror_message("getStringFormatMove");
+		exit(0);
+	}
 	Pos* curr = move.currPos;
 	char* curr_str = getStringFormatPos(curr);
 	strcpy(res, curr_str);
@@ -2231,6 +2350,11 @@ char* getStringFormatMove(Move move)
 char* getStringFormatPos(Pos* pos)
 {
 	char* res = (char *)malloc(sizeof(char)* 512);
+	if (res == NULL)
+	{
+		perror_message("getStringFormatPos");
+		exit(0);
+	}
 	res[0] = '<';
 	char x_char = pos->x + 'a';
 	res[1] = x_char;
@@ -2256,7 +2380,13 @@ int computerTurn()
 	//Todo:print computerMove!!
 	char* moveStr = getStringFormatMove(*computerMove);
 	
-	printf("%s%s", "Computer: move ", moveStr);
+	if (printf("%s%s", "Computer: move ", moveStr) < 0)
+	{
+		freeMove(computerMove);
+		free(moveStr);
+		perror_message("set_minimax_depth");
+		exit(0);
+	}
 	print_board(board);
 	freeMove(computerMove);
 	free(moveStr);
@@ -2274,7 +2404,11 @@ int userTurn()
 	else
 		player_color = BLACK;
 
-	printf("%s", ENTER_YOUR_MOVE);
+	if (printf("%s", ENTER_YOUR_MOVE) < 0)
+	{
+		perror_message("userTurn");
+		exit(0);
+	}
 	char* command = getString(stdin, 10);
 	while (strcmp(command, "quit") != 0)
 	{
@@ -2286,11 +2420,20 @@ int userTurn()
 			while (movesPointer != NULL)
 			{
 				char*  moveStr = getStringFormatMove(*movesPointer->move);
-				printf("%s", moveStr);
+				if (printf("%s", moveStr) < 0)
+				{
+					free(moveStr);
+					perror_message("userTurn");
+					exit(0);
+				}
 				movesPointer = movesPointer->next;
 				free(moveStr);
 			}
-			printf("%s", ENTER_YOUR_MOVE);
+			if (printf("%s", ENTER_YOUR_MOVE) < 0)
+			{
+				perror_message("userTurn");
+				exit(0);
+			}
 			free(command);
 			freeMoves(moves, NULL);
 		}
@@ -2303,7 +2446,11 @@ int userTurn()
 				if (move == NULL)
 				{
 					free(command);
-					printf("%s", ENTER_YOUR_MOVE);
+					if (printf("%s", ENTER_YOUR_MOVE) < 0)
+					{
+						perror_message("userTurn");
+						exit(0);
+					}
 					command = getString(stdin, 10);
 					if (strstr(command, "quit"))
 					{
@@ -2356,7 +2503,12 @@ int userTurn()
 		else
 		{
 			free(command);
-			printf("%s", ILLEGAL_COMMAND);
+			if (("%s", ILLEGAL_COMMAND) < 0)
+			{
+				perror_message("userTurn");
+				exit(0);
+			}
+
 			
 		}
 
@@ -2378,7 +2530,11 @@ int checkifPlayerWins(int player_color)
 	char* color = player_color == WHITE ? "White" : "Black" ;
 	if (scoreNum == 100)
 	{
-		printf("%s %s", color, "player wins!\n");
+		if (printf("%s %s", color, "player wins!\n") < 0)
+		{
+			perror_message("checkifPlayerWins");
+			exit(0);
+		}
 		return 1;
 	}
 		
@@ -2397,7 +2553,11 @@ int performUserMove(Move move)
 	int x_int = move.currPos->x;
 	if (board[x_int][move.currPos->y] != game_players.user_m && board[x_int][move.currPos->y] != game_players.user_k)
 	{
-		printf("%s", NO_DICS);
+		if (printf("%s", NO_DICS) < 0)
+		{
+			perror_message("performUserMove");
+			exit(0);
+		}
 		return 0;
 	}
 	else if (king == 0)
@@ -2405,7 +2565,11 @@ int performUserMove(Move move)
 		if (checkMoveIsValidMan(move, game_players.user_direction) == 0)//check man move
 		{
 			//move is not valid
-			printf("%s", ILLEGAL_MOVE);
+			if (printf("%s", ILLEGAL_MOVE) < 0)
+			{
+				perror_message("performUserMove");
+				exit(0);
+			}
 			return 0;
 		}
 	}	
@@ -2414,7 +2578,11 @@ int performUserMove(Move move)
 		if (checkMoveIsValidKing(move, game_players.user_direction) == 0)//check king move
 		{
 			//move is not valid
-			printf("%s", ILLEGAL_MOVE);
+			if (printf("%s", ILLEGAL_MOVE) < 0)
+			{
+				perror_message("performUserMove");
+				exit(0);
+			}
 			return 0;
 		}
 	}
@@ -3086,14 +3254,12 @@ int main()
 	//unitTestValidMoves();
 	//unitTestCheckStuckAndScore();
 	//unitTestMinimaxAndMoves();
-	//code for debug:
-	/*
-	set_minimax_depth(3);
-	*/
 	
-	
-	
-	printf("%s", WELCOME_TO_DRAUGHTS);
+	if (printf("%s", WELCOME_TO_DRAUGHTS) < 0)
+	{
+		perror_message("main");
+		exit(0);
+	}
 	settingState(board);
 	return 0;
 }
