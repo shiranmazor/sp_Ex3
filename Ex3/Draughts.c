@@ -83,6 +83,8 @@ struct Move{
 
 void freeMove(Move *move)
 {
+	if (move == NULL)
+		return;
 	free(move->currPos);
 	PosNode *node = move->dest;
 	while (node != NULL)
@@ -2299,7 +2301,14 @@ int userTurn()
 					free(command);
 					printf("%s", ENTER_YOUR_MOVE);
 					command = getString(stdin, 10);
-					if (strstr(command, "move"))
+					if (strstr(command, "quit"))
+					{
+						freeMove(move);
+						free(command);
+						
+						exit(0);
+					}
+					else if (strstr(command, "move"))
 					{
 						move = parseMoveCommand(command);
 					}
