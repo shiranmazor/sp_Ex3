@@ -2287,6 +2287,7 @@ int userTurn()
 				movesPointer = movesPointer->next;
 				free(moveStr);
 			}
+			printf("%s", ENTER_YOUR_MOVE);
 			free(command);
 			freeMoves(moves, NULL);
 		}
