@@ -21,7 +21,6 @@ Players game_players;
 void *myMalloc(size_t size) {
 	objectsInMemory++;
 	void * ptr = malloc(size);
-	assert(ptr != NULL);
 	return ptr;
 }
 
@@ -29,14 +28,12 @@ void myFree(void  *memory) {
 	if (memory == NULL)
 		return;
 	objectsInMemory--;
-	//printf("%p\n", memory);
 	free(memory);
 }
 
 void *myCalloc(size_t  Count, size_t size) {
 	objectsInMemory++;
 	void *ptr = calloc(Count, size);
-	assert(ptr != NULL);
 	return ptr;
 }
 
@@ -45,7 +42,6 @@ void *myRealloc(void  *memory, size_t newSize) {
 		objectsInMemory++;
 	
 	void *ptr = realloc(memory, newSize);
-	assert(ptr != NULL);
 	return ptr;
 }
 
@@ -2165,7 +2161,7 @@ void GameState()
 	{
 		resComputer = computerTurn();
 		if (resComputer == 1)
-			return;//computer won
+			exit(0);//computer won
 		else
 		{
 			resUser = userTurn();
@@ -2177,7 +2173,7 @@ void GameState()
 	{
 		resUser = userTurn();
 		if (resUser == 1)
-			return;//user won
+			exit(0);//user won
 		else
 		{
 			resComputer = computerTurn();
@@ -2199,7 +2195,8 @@ void GameState()
 			isComputerTurn = 1;
 		}
 			
-	}		
+	}
+	exit(0);
 
 }
 
