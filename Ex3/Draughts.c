@@ -2518,7 +2518,11 @@ int userTurn()
 				perror_message("userTurn");
 				exit(0);
 			}
-
+			if (printf("%s", ENTER_YOUR_MOVE) < 0)
+			{
+				perror_message("userTurn");
+				exit(0);
+			}
 			
 		}
 
