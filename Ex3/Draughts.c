@@ -2465,6 +2465,14 @@ int userTurn()
 					{
 						move = parseMoveCommand(command);
 					}
+					else //illegal command 
+					{
+						if (printf("%s", ILLEGAL_COMMAND) < 0)
+						{
+							perror_message("userTurn");
+							exit(0);
+						}
+					}
 				}
 				if (move != NULL)
 				{
