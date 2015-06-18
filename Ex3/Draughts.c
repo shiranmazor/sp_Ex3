@@ -3221,8 +3221,10 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 				{
 					bestValue = newRes;
 					*(bestMove) = movesPointer->move;
-					
+
 				}
+				else if (bestValue < newRes)
+					bestValue = newRes;
 					
 				movesPointer = movesPointer->next;
 			}
@@ -3263,11 +3265,6 @@ int minimax(char board[BOARD_SIZE][BOARD_SIZE],int depth, int isMaxplayer, Move*
 
 int main()
 {
-	//unitTests();
-	//unitTestsSettingFuncs();
-	//unitTestValidMoves();
-	//unitTestCheckStuckAndScore();
-	//unitTestMinimaxAndMoves();
 	
 	if (printf("%s", WELCOME_TO_DRAUGHTS) < 0)
 	{
